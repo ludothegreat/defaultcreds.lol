@@ -1,0 +1,22 @@
+[
+  { "user": "admin", "pass": "admin" },
+  { "user": "admin", "pass": "password" },
+  { "user": "admin", "pass": "1234" },
+  { "user": "admin", "pass": "12345" },
+  { "user": "admin", "pass": "123456" },
+  { "user": "root", "pass": "root" },
+  { "user": "root", "pass": "admin" },
+  { "user": "root", "pass": "password" },
+  { "user": "user", "pass": "user" },
+  { "user": "user", "pass": "password" },
+  { "user": "guest", "pass": "guest" },
+  { "user": "test", "pass": "test" },
+  { "user": "support", "pass": "support" },
+  { "user": "administrator", "pass": "admin" },
+  { "user": "administrator", "pass": "password" },
+  { "user": "cisco", "pass": "cisco" },
+  { "user": "ubnt", "pass": "ubnt" },
+  { "user": "pi", "pass": "raspberry" },
+  { "user": "ftp", "pass": "ftp" },
+  { "user": "admin", "pass": "changeme" }
+]

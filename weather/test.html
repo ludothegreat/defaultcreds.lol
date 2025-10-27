@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5-Day Low Temperature Fetch</title>
+</head>
+<body>
+    <h1>5-Day Low Temperature Fetch</h1>
+    <div id="forecast-days">
+        <p>Loading forecast...</p>
+    </div>
+
+    <script>
+        async function fetchLowTemperatureFor5Days() {
+            try {
+                // Step 1: Get gridpoint using points endpoint
+                const response = await fetch('https://api.weather.gov/points/42.5136,-90.6012');
+                const data = await response.json();
+
+                // Use gridpoint to get the 5-day forecast data
+                const gridpoint = data.properties.gridId + '/' + data.properties.gridX + ',' + data.properties.gridY;
+                const forecastResponse = await fetch(`https://api.weather.gov/gridpoints/${gridpoint}/forecast`);
+                const forecastData = await forecastResponse.json();
+                const forecastPeriods = forecastData.properties.periods.slice(0, 5); // Get the first 5 periods
+
+                // Step 2: Fetch the hourly forecast data
+                const hourlyResponse = await fetch(`https://api.weather.gov/gridpoints/${gridpoint}/forecast/hourly`);
+                const hourlyData = await hourlyResponse.json();
+
+                // Step 3: Loop through each forecast period and find the low temperature
+                let output = ''; // Store the results for each day
+
+                // Loop through each forecast day
+                for (const day of forecastPeriods) {
+                    let lowTemperature = "No low temperature available"; // Default value
+
+                    // Convert the forecast period start and end times into hours
+                    const startTime = new Date(day.startTime).getHours();
+                    const endTime = new Date(day.endTime).getHours();
+
+                    // Filter the hourly temperatures for this forecast period
+                    const hourlyTemps = hourlyData.properties.periods.filter(period => {
+                        const hour = new Date(period.startTime).getHours();
+                        return hour >= startTime && hour < endTime;
+                    }).map(period => period.temperature);
+
+                    // If we have hourly temps, find the minimum low temperature for this day
+                    if (hourlyTemps.length > 0) {
+                        lowTemperature = Math.min(...hourlyTemps) + "°F"; // Find the minimum temp for this day
+                    }
+
+                    // Store the result for this day
+                    output += `${day.name}: Low Temperature: ${lowTemperature}\n`;
+                }
+
+                // Display the output in plain text on the page
+                document.getElementById("forecast-days").textContent = output;
+
+            } catch (error) {
+                console.error('Error fetching weather data:', error);
+                document.getElementById("forecast-days").textContent = "Failed to load forecast data.";
+            }
+        }
+
+        fetchLowTemperatureFor5Days();
+    </script>
+</body>
+</html>
