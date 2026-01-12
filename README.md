@@ -177,7 +177,7 @@ Contributions are welcome! Some ideas:
 
 ## License
 
-MIT License - feel free to use this project however you'd like.
+[MIT License](LICENSE) - feel free to use this project however you'd like.
 
 ## Credits
 
