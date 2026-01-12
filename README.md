@@ -4,7 +4,7 @@
 
 **defaultcreds.lol** is a sleek, dark-mode RSS feed aggregator that curates the latest cybersecurity news from trusted sources, wrapped in a playful UI themed around default credentials. Because nothing says "security" quite like `admin:password123`.
 
-## 🔑 Features
+## Features
 
 ### News Aggregation
 - **Multi-source RSS feeds** - Aggregates from 7+ cybersecurity news sources including:
@@ -35,14 +35,14 @@
 - **Responsive design** - Works on desktop, tablet, and mobile
 - **Zero backend** - Pure client-side application
 
-## 🎨 UI Highlights
+## UI Highlights
 
 - **Faux browser address bar** - Shows credentials in URL format (`admin:admin@defaultcreds.lol`)
 - **Credential history dropdown** - Click the credentials to see a list of common defaults
 - **Smooth animations** - Polished hover effects and transitions throughout
 - **Feed-colored borders** - Each feed gets a unique color for easy identification
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - A web server (Python's SimpleHTTPServer, Node's http-server, etc.)
@@ -75,7 +75,7 @@
 
 That's it! No build process, no dependencies to install.
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 defaultcreds.lol/
@@ -90,7 +90,7 @@ defaultcreds.lol/
 └── top_1000_passwords.txt  # Password wordlist for animations
 ```
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 - **Vanilla JavaScript** - No frameworks, just pure JS
 - **Pico CSS** - Minimal CSS framework for base styling
@@ -102,7 +102,7 @@ defaultcreds.lol/
 - **localStorage API** - Client-side caching for performance
 - **GitHub API** - Fetching credentials from SecLists repository
 
-## 🎯 Key Implementation Details
+## Key Implementation Details
 
 ### CORS Proxy Fallbacks
 The site uses multiple CORS proxies with smart retry logic:
@@ -123,7 +123,7 @@ The site uses multiple CORS proxies with smart retry logic:
 - Lazy loading of feed content
 - Minimal DOM updates
 
-## 🎨 Customization
+## Customization
 
 ### Adding New Feeds
 
@@ -160,13 +160,13 @@ Edit `creds.json` to add more default credentials to the rotation:
 }
 ```
 
-## 🐛 Known Issues
+## Known Issues
 
 - Some RSS feeds may fail to load due to CORS proxy rate limiting
 - ThreatPost feed appears to be discontinued (shows old articles)
 - First load may be slow as it fetches multiple feeds
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Some ideas:
 - Add more cybersecurity news sources
@@ -175,21 +175,21 @@ Contributions are welcome! Some ideas:
 - Create backend API for better CORS handling
 - Add unit tests
 
-## 📝 License
+## License
 
 MIT License - feel free to use this project however you'd like.
 
-## 🙏 Credits
+## Credits
 
 - **SecLists** - Daniel Miessler's excellent security testing wordlists
 - **Pico CSS** - Minimal CSS framework
 - **RSS Parser** - Bobby Mozumder's RSS parsing library
 - All the cybersecurity news sources for their RSS feeds
 
-## ⚠️ Disclaimer
+## Disclaimer
 
 This site is for educational and informational purposes. The default credentials displayed are publicly available and should **never** be used in production systems. Always use strong, unique passwords.
 
 ---
 
-**Remember**: If you're using default credentials in production, you're not just on defaultcreds.lol - you're the reason it exists. 🔐
+**Remember**: If you're using default credentials in production, you're not just on defaultcreds.lol - you're the reason it exists.
