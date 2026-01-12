@@ -1,0 +1,145 @@
+{
+    "description": "DO NOT DELETE THIS FILE. This file is used to keep track of which files have been synced in the most recent deployment. If you delete this file a resync will need to be done (which can take a while) - read more: https://github.com/SamKirkland/FTP-Deploy-Action",
+    "version": "1.0.0",
+    "generatedTime": 1748037727355,
+    "data": [
+        {
+            "type": "folder",
+            "name": ".idx"
+        },
+        {
+            "type": "file",
+            "name": "creds.js",
+            "size": 3938,
+            "hash": "57ea137cdbfe3ed6d0780026c5d18b37ff646b9ad0cd74a0b884c91427654573"
+        },
+        {
+            "type": "folder",
+            "name": "guides"
+        },
+        {
+            "type": "file",
+            "name": "index.html",
+            "size": 4786,
+            "hash": "b9099858e44b9199092677ffa303c4e0c49b7b804a087574d92fe145db037c4f"
+        },
+        {
+            "type": "folder",
+            "name": "jdownloader"
+        },
+        {
+            "type": "file",
+            "name": "news.js",
+            "size": 8028,
+            "hash": "e918a73f5cd35f73dde951121a3ef257006e22656959f55e325097a741a27161"
+        },
+        {
+            "type": "file",
+            "name": "styles.css",
+            "size": 6681,
+            "hash": "4574053e02ffae4ab436179dbec08d81280a3a943563d6008fb84d8b948ff0a0"
+        },
+        {
+            "type": "file",
+            "name": "theme.js",
+            "size": 642,
+            "hash": "53d0a300dec508add47e77386d509e913651e6394591209e29f6ea5dddff030b"
+        },
+        {
+            "type": "file",
+            "name": "widget.js",
+            "size": 2500,
+            "hash": "46068cb346ae93a73797f2234f2c883e2598c2ea3dcac88a198247aab6aee47e"
+        },
+        {
+            "type": "file",
+            "name": ".idx/dev.nix",
+            "size": 1543,
+            "hash": "9d65b7e8d72ccf6c6e847663a39c9767cdefb72c963c4b126c3c934ec48eab81"
+        },
+        {
+            "type": "file",
+            "name": "guides/dbi.html",
+            "size": 3987,
+            "hash": "09261be149e0a895ce741c541de247b7d0c0a0fa173e95642c922d2d6e254841"
+        },
+        {
+            "type": "file",
+            "name": "jdownloader/index.html",
+            "size": 6031,
+            "hash": "4eec5d9c9af9dfa5562d90f2a8e0f3d2707f669ae5c3e6fbf9e576a92447b952"
+        },
+        {
+            "type": "file",
+            "name": "jdownloader/jdownload1.png",
+            "size": 188035,
+            "hash": "870a0fa2a4b0daa8ecc630a45345eeb17a730b0eba901556567c284686b5976e"
+        },
+        {
+            "type": "file",
+            "name": "jdownloader/jdownload10.png",
+            "size": 397036,
+            "hash": "7556304a85d74a33194276103eb63d240850dd363cfdbf1314e339bb5abb556e"
+        },
+        {
+            "type": "file",
+            "name": "jdownloader/jdownload11.png",
+            "size": 133023,
+            "hash": "e958b32705f91e9a24151f5918f2690ac10f58486d34192841ec1389cd8d994d"
+        },
+        {
+            "type": "file",
+            "name": "jdownloader/jdownload12.png",
+            "size": 208736,
+            "hash": "20153ab3fa98890a9994a7110aee2a9bc1d9ca3221a2e5c7d81f2515f641292f"
+        },
+        {
+            "type": "file",
+            "name": "jdownloader/jdownload2.png",
+            "size": 309549,
+            "hash": "eac1655eead416f62a8c2f3344b8fd2fcfb5964d8966ba5441ff42aa8ddb8da5"
+        },
+        {
+            "type": "file",
+            "name": "jdownloader/jdownload3.png",
+            "size": 397450,
+            "hash": "3573ac452ef02b9a3d95314a4d0df150390f7ab54fdcafdbaf86301fe9f08ef5"
+        },
+        {
+            "type": "file",
+            "name": "jdownloader/jdownload4.png",
+            "size": 405281,
+            "hash": "74f951136d3542290a7318bf503623e9686c90ee2476cf895cb82f542e12d17b"
+        },
+        {
+            "type": "file",
+            "name": "jdownloader/jdownload5.png",
+            "size": 164728,
+            "hash": "ced5d1176641ff62f9c09c84dcc7ccaaa68a80b18ba5eb36183721fb88714454"
+        },
+        {
+            "type": "file",
+            "name": "jdownloader/jdownload7.png",
+            "size": 327972,
+            "hash": "2e40682d84bb53903097b4085dea2ec425e391dff45b520a69a9b11eedd9c65f"
+        },
+        {
+            "type": "file",
+            "name": "jdownloader/jdownload6.png",
+            "size": 202039,
+            "hash": "6adb2e6190bfdc75c4a655dcee5a909d2c2f2b62e3098125882e632821b847e0"
+        },
+        {
+            "type": "file",
+            "name": "jdownloader/jdownload8.png",
+            "size": 109490,
+            "hash": "f9fcbbf6e66fafac2d86f19a33a6d90bf1e1084d98de6a6b8b75e83a3b09f830"
+        },
+        {
+            "type": "file",
+            "name": "jdownloader/jdownload9.png",
+            "size": 236882,
+            "hash": "d97b8fba52c28d2a15c58c67eeb0924f35a5b3ebd26bdd8a85aff5191d7f2ead"
+        }
+    ]
+}

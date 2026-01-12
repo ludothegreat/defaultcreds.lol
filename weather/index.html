@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Forecast</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+        }
+        .weather-info, .forecast {
+            margin-bottom: 20px;
+        }
+        .forecast-day {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+        }
+        .forecast-day strong {
+            font-size: 1.5em;
+        }
+        .forecast-day .main-info {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .forecast-day .description {
+            font-size: 1em;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Weather Forecast</h1>
+        <div class="weather-info">
+            <h2>Current Weather</h2>
+            <p id="current-temp">Loading temperature...</p>
+            <p id="current-humidity">Loading humidity...</p>
+            <p id="current-description">Loading description...</p>
+        </div>
+        <div class="forecast">
+            <h2>5-Day Forecast</h2>
+            <div id="forecast-days">
+                <p>Loading forecast...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Function to extract low temperature from detailed forecast
+        function extractLowTemperature(detailedForecast) {
+            const lowTempMatch = detailedForecast.match(/low around (\d+)\u00b0F/i);
+            return lowTempMatch ? lowTempMatch[1] : "No low temperature available";
+        }
+
+        async function fetchWeatherData() {
+            try {
+                const response = await fetch('https://api.weather.gov/points/42.5136,-90.6012');
+                const data = await response.json();
+                const { forecast, observationStations } = data.properties;
+
+                // Fetch current weather data
+                const stationResponse = await fetch(observationStations);
+                const stationData = await stationResponse.json();
+                const stationId = stationData.features[0].properties.stationIdentifier;
+                const observationResponse = await fetch(`https://api.weather.gov/stations/${stationId}/observations/latest`);
+                const observationData = await observationResponse.json();
+                const currentTemp = observationData.properties.temperature.value;
+                const currentHumidity = observationData.properties.relativeHumidity.value;
+                const currentDescription = observationData.properties.textDescription;
+
+                // Fetch 5-day forecast
+                const forecastResponse = await fetch(forecast);
+                const forecastData = await forecastResponse.json();
+                const forecastPeriods = forecastData.properties.periods.slice(0, 5);
+
+                // Update current weather
+                document.getElementById('current-temp').textContent = `Temperature: ${currentTemp}°F`;
+                document.getElementById('current-humidity').textContent = `Humidity: ${currentHumidity}%`;
+                document.getElementById('current-description').textContent = `Description: ${currentDescription}`;
+
+                // Update forecast
+                const forecastContainer = document.getElementById("forecast-days");
+                forecastContainer.innerHTML = ''; // Clear loading text
+
+                forecastPeriods.forEach(day => {
+                    const forecastElement = document.createElement("div");
+                    forecastElement.classList.add("forecast-day");
+
+                    // Extracting high temperature
+                    const highTemp = day.temperature || "No high temperature available";
+                    const highTemperature = typeof highTemp === 'object' ? highTemp.value : highTemp;
+
+                    // Extract low temperature from detailed forecast
+                    let lowTemperature = day.temperatureLow || "No low temperature available";
+                    if (!lowTemperature && day.detailedForecast) {
+                        lowTemperature = extractLowTemperature(day.detailedForecast);
+                    }
+
+                    const shortForecast = day.shortForecast || "No forecast available";
+                    const detailedForecast = day.detailedForecast || "No detailed description available";
+
+                    // Construct the forecast display
+                    const mainInfo = `
+                        <div class="main-info">
+                            <strong>${day.name}</strong><br>
+                            High: ${highTemperature}°F | Low: ${lowTemperature}°F<br>
+                            Weather: ${shortForecast}
+                        </div>
+                    `;
+
+                    // Construct the detailed description
+                    const description = `
+                        <div class="description">
+                            ${detailedForecast}
+                        </div>
+                    `;
+
+                    forecastElement.innerHTML = mainInfo + description;
+                    forecastContainer.appendChild(forecastElement);
+                });
+
+            } catch (error) {
+                console.error('Error fetching weather data:', error);
+                document.getElementById("forecast-days").textContent = "Failed to load forecast data.";
+            }
+        }
+
+        fetchWeatherData();
+    </script>
+</body>
+</html>
