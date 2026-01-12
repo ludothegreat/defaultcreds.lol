@@ -174,13 +174,19 @@ main.container > aside {
 
 /* panels */
 #feed-settings,
-#cred-of-week,
 .loading-indicator {
-  background: var(--bg-color);
-  border: 1px solid var(--muted-color);
-  border-radius: 0.5rem;
-  padding: 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
   margin-bottom: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+#feed-settings:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 #news-feed {
@@ -208,33 +214,41 @@ main.container > aside {
 }
 
 .feed-category-chip {
-  border: 1px solid var(--muted-color);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   color: var(--text-color);
-  background: transparent;
+  background: rgba(255, 255, 255, 0.05);
   border-radius: 999px;
-  padding: 0.25rem 0.75rem;
+  padding: 0.35rem 0.9rem;
   cursor: pointer;
   font-size: 0.85rem;
-  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
 .feed-category-chip:hover,
 .feed-category-chip:focus {
   outline: none;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(74, 144, 226, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .feed-category-chip[data-state="inactive"] {
   opacity: 0.5;
+  background: transparent;
 }
 
 .feed-controls-buttons button {
-  border: 1px solid var(--muted-color);
-  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.03);
   color: var(--text-color);
-  border-radius: 0.4rem;
-  padding: 0.35rem 0.85rem;
+  border-radius: 0.5rem;
+  padding: 0.4rem 1rem;
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
 .feed-controls-buttons button:hover,
@@ -287,11 +301,19 @@ main.container > aside {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  border: 1px solid var(--muted-color);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.5rem;
-  padding: 0.6rem 0.8rem;
-  background: var(--bg-color);
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.02);
   border-left: 4px solid transparent;
+  transition: all 0.2s ease;
+  margin-bottom: 0.5rem;
+}
+
+.feed-option:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateX(2px);
 }
 
 .feed-option-label {
@@ -323,15 +345,17 @@ html.dark .feed-category-pill {
   background: transparent;
 }
 
-.feed-option[data-active="false"],
-.feed-option[data-selected="false"] {
-  opacity: 0.4;
-}
-
+/* FIXED: Feeds in inactive categories are hidden completely */
 .feed-option[data-active="false"] {
-  pointer-events: none;
+  display: none;
 }
 
+/* FIXED: Unchecked feeds are dimmed but still interactive */
+.feed-option[data-selected="false"] {
+  opacity: 0.65;
+}
+
+/* Keep category pill styling for unselected feeds */
 .feed-option[data-selected="false"] .feed-category-pill {
   border-color: var(--muted-color) !important;
   background: transparent !important;
@@ -387,36 +411,60 @@ html.dark .feed-category-pill {
 
 /* dynamic feed cards */
 .feed-section {
-  border: 1px solid var(--muted-color);
-  border-radius: 0.5rem;
-  padding: 1rem;
-  margin-bottom: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
   border-left: 4px solid transparent;
-  transition: background .2s, border-color .2s;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.01);
 }
 
 .feed-section:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
 }
 
 .feed-section h2 {
-  font-size: 2rem;
-  /* Larger than headlines */
-  font-weight: 900;
-  /* Extra bold */
-  margin-top: 1.5rem;
-  margin-bottom: 0.5rem;
-  letter-spacing: 0.01em;
-  text-shadow: 0 2px 8px #0007;
-  /* Optional: subtle shadow for pop */
-  border-bottom: 2px solid var(--muted-color);
-  /* Optional underline */
-  padding-bottom: 0.2em;
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+  letter-spacing: -0.01em;
+  padding-bottom: 0.75rem;
+  border-bottom: 3px solid currentColor;
+  opacity: 0.9;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.feed-section h2:hover {
+  opacity: 1;
+  transform: translateX(2px);
 }
 
 /* cred-of-week tweaks */
+#cred-of-week {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  transition: all 0.3s ease;
+}
+
+#cred-of-week:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
 #cred-of-week h3 {
   margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
 #cred-of-week p {
@@ -500,7 +548,48 @@ html.dark .feed-category-pill {
 
 /* news feed styling */
 #news-feed article {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+html.dark #news-feed article {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+#news-feed article:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(74, 144, 226, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+#news-feed article banner h3 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text-color);
+}
+
+#news-feed article banner h3 a {
+  text-decoration: none;
+  color: inherit;
+  transition: color 0.2s ease;
+}
+
+#news-feed article banner h3 a:hover {
+  color: var(--accent-color);
+}
+
+#news-feed article contentinfo {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--muted-color);
 }
 
 #news-feed h2 {
@@ -538,25 +627,29 @@ html.dark mark.search-highlight {
 #search-bar {
   width: 100%;
   max-width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--muted-color);
-  border-radius: 0.5rem;
-  background: var(--bg-color);
+  padding: 0.875rem 1.25rem;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
   color: var(--text-color);
-  box-shadow: 0 2px 6px #0001;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  font-size: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
   box-sizing: border-box;
   display: block;
 }
 
 #search-bar::placeholder {
   color: var(--muted-color);
+  opacity: 0.7;
 }
 
 #search-bar:focus {
-  border-color: #4a90e2;
-  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+  border-color: var(--accent-color);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.15), 0 4px 16px rgba(0, 0, 0, 0.2);
   outline: none;
+  transform: translateY(-1px);
 }
 
 /* status messages */
@@ -823,15 +916,4 @@ html.dark .creds-history .history-item:focus {
 
 #refresh-cred:hover {
   transform: rotate(180deg);
-}
-.feed-option[data-active="false"] {
-  opacity: 0.4;
-  pointer-events: none;
-}
-
-.feed-option[data-active="false"] .feed-category-pill {
-  opacity: 0.6;
-}
-.feed-option[data-selected="false"] {
-  pointer-events: none;
 }

@@ -24,6 +24,16 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/picocss@2/css/pico.min.css">
   <link rel="stylesheet" href="styles.css">
+
+  <!-- Apply dark mode immediately to prevent flash of light content -->
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme !== 'light') {
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
 </head>
 
 <body>

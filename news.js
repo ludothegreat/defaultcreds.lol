@@ -141,8 +141,12 @@ if (!storedSelectedFeedsValue) {
   });
 }
 
-// 3) Proxy & parser
-const CORS_PROXY = "https://api.allorigins.win/raw?url=";
+// 3) Proxy & parser - FIXED: Multiple fallback proxies
+const CORS_PROXIES = [
+  "https://api.allorigins.win/raw?url=",
+  "https://corsproxy.io/?",
+  "https://api.codetabs.com/v1/proxy?quest="
+];
 const parser = new RSSParser();
 const PASSWORD_WORDLIST_URL = 'top_1000_passwords.txt';
 
@@ -269,7 +273,8 @@ function renderFeedForm() {
         toggleCategory(category);
         renderCategoryChips(controls.querySelector('.feed-category-chips'));
         renderFeedOptions(feedOptionsContainer);
-        loadNews();
+        // FIXED: Don't call loadNews() - just update visibility
+        applyFeedOrderToDom();
       }
     });
     controls.dataset.bound = 'true';
@@ -483,23 +488,56 @@ function feedKey(feed) {
   return btoa(feed.url).replace(/=/g, '');
 }
 
-// 7) Fetch raw XML
+// 7) Fetch raw XML - FIXED: Multiple proxy fallbacks and XML validation
 async function fetchXml(feed) {
-  const maxRetries = 3;
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      const res = await fetch(CORS_PROXY + encodeURIComponent(feed.url));
-      if (!res.ok) throw new Error(`Proxy ${res.status}`);
-      return await res.text();
-    } catch (err) {
-      console.warn(`Fetch attempt ${i + 1} failed for ${feed.name}:`, err);
-      if (i === maxRetries - 1) {
-        err.isProxyError = true;
-        throw err; // Re-throw the error after the last attempt
+  const maxRetries = 2;
+
+  for (const proxy of CORS_PROXIES) {
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        const res = await fetch(proxy + encodeURIComponent(feed.url));
+        if (!res.ok) throw new Error(`Proxy ${res.status}`);
+
+        const text = await res.text();
+
+        // FIXED: Validate it's XML, not HTML error page
+        const trimmed = text.trim();
+        if (trimmed.startsWith('<!DOCTYPE') || trimmed.startsWith('<html') || trimmed.startsWith('<HTML')) {
+          const htmlError = new Error('Proxy returned HTML instead of XML');
+          htmlError.skipRetry = true; // Don't retry - proxy won't fix itself
+          throw htmlError;
+        }
+
+        // Check if it looks like XML
+        if (!trimmed.startsWith('<?xml') && !trimmed.startsWith('<rss') && !trimmed.startsWith('<feed')) {
+          const xmlError = new Error('Response does not appear to be valid RSS/Atom XML');
+          xmlError.skipRetry = true; // Don't retry - response is consistently bad
+          throw xmlError;
+        }
+
+        return text;
+      } catch (err) {
+        // Only show warning if it's a real network error (not expected proxy failures)
+        const isExpectedFailure = err.skipRetry || err.message.includes('HTML') || err.message.includes('RSS/Atom');
+        if (!isExpectedFailure) {
+          console.warn(`Fetch attempt ${i + 1} failed for ${feed.name} with proxy ${proxy}:`, err.message);
+        }
+
+        // If it's a proxy returning bad content (not network error), skip to next proxy immediately
+        if (err.skipRetry) break;
+
+        if (i < maxRetries - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
       }
-      await new Promise(resolve => setTimeout(resolve, 500)); // Wait before retrying
     }
   }
+
+  // All proxies failed - only log once at the end
+  console.warn(`All CORS proxies failed for ${feed.name} - using cached content if available`);
+  const err = new Error(`All CORS proxies failed for ${feed.name}`);
+  err.isProxyError = true;
+  throw err;
 }
 
 // 8) Parse XML to JS
@@ -531,7 +569,7 @@ function renderItems(section, feedName, items) {
     // Format the date
     const pubDate = new Date(item.pubDate);
     const formattedDate = `${(pubDate.getMonth() + 1).toString().padStart(2, '0')}-${pubDate.getDate().toString().padStart(2, '0')}-${pubDate.getFullYear()}`;
-    
+
     // Format the time in 12-hour format
     let hours = pubDate.getHours();
     const minutes = pubDate.getMinutes().toString().padStart(2, '0');
@@ -597,7 +635,8 @@ async function handleFeed(feed) {
       status.remove();
       renderItems(section, feed.name, data.items);
     } catch (e) {
-      console.warn('Cache parse error', e);
+      // Cache is corrupted (likely HTML from failed proxy), clear it silently
+      localStorage.removeItem(cacheKey);
     }
   }
 
@@ -621,11 +660,11 @@ async function handleFeed(feed) {
     if (section.querySelector('.status')) {
       // More specific error messages
       if (err.isProxyError) {
-        status.textContent = `Couldn’t load ${feed.name}: News CORS proxy unavailable.`;
+        status.textContent = `Couldn't load ${feed.name}: All CORS proxies unavailable.`;
       } else if (err.isParserError) {
-        status.textContent = `Couldn’t load ${feed.name}: RSS parser failed (possibly CDN down).`;
+        status.textContent = `Couldn't load ${feed.name}: RSS parser failed.`;
       } else {
-        status.textContent = `Couldn’t load ${feed.name}.`;
+        status.textContent = `Couldn't load ${feed.name}.`;
       }
       status.classList.add('error');
       // Add visual indicator for failed feed
@@ -718,7 +757,7 @@ async function loadNews() {
   const container = document.getElementById('news-feed');
   const loadingIndicator = document.getElementById('loading-indicator');
   const filterStatus = document.getElementById('filter-status');
-  
+
   // Clear previous content and reset filter messaging
   container.innerHTML = '';
   if (filterStatus) {
@@ -747,14 +786,14 @@ async function loadNews() {
   animatePassword();
 
   const results = await Promise.all(selected.map(f => handleFeed(f)));
-  
+
   // Hide loading indicator and render results
   if (loadingIndicator) {
     loadingIndicator.classList.remove('visible');
     loadingIndicator.setAttribute('aria-hidden', 'true');
   }
   clearInterval(animationInterval);
-  
+
   results.forEach(section => container.appendChild(section));
 
   const searchBar = document.getElementById('search-bar');
