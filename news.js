@@ -131,8 +131,6 @@ selectedFeeds = Array.from(new Set(selectedFeeds));
 const storedFeedFilterTerm = localStorage.getItem('feedFilterTerm');
 let feedFilterTerm = storedFeedFilterTerm || '';
 let feedOptionsContainer = null;
-const storedFeedPanelState = localStorage.getItem('feedPanelOpen');
-let feedPanelOpen = storedFeedPanelState !== 'false';
 const storedActiveCategories = localStorage.getItem('activeFeedCategories');
 let activeFeedCategories = (() => {
   if (storedActiveCategories) {
@@ -204,23 +202,9 @@ function loadPasswordList() {
 // ============================================
 
 function renderFeedForm() {
-  const panelHeader = document.querySelector('#feed-settings .panel-header');
   const panelContent = document.getElementById('feed-panel-content');
 
-  if (!panelHeader || !panelContent) return;
-
-  // Set initial expanded state
-  panelHeader.setAttribute('aria-expanded', feedPanelOpen ? 'true' : 'false');
-
-  // Toggle handler
-  if (!panelHeader.dataset.bound) {
-    panelHeader.addEventListener('click', () => {
-      feedPanelOpen = !feedPanelOpen;
-      panelHeader.setAttribute('aria-expanded', feedPanelOpen ? 'true' : 'false');
-      localStorage.setItem('feedPanelOpen', feedPanelOpen ? 'true' : 'false');
-    });
-    panelHeader.dataset.bound = 'true';
-  }
+  if (!panelContent) return;
 
   // Feed actions
   const feedActions = panelContent.querySelector('.feed-actions');
@@ -1011,12 +995,80 @@ function initBackToTop() {
 }
 
 // ============================================
+// SIDEBAR HOVER & PIN
+// ============================================
+
+function initSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const sidebarPinBtn = document.getElementById('sidebar-pin');
+  const hoverTrigger = document.querySelector('.sidebar-hover-trigger');
+  const appLayout = document.querySelector('.app-layout');
+
+  if (!sidebar || !sidebarPinBtn || !hoverTrigger || !appLayout) return;
+
+  // Load pinned state
+  const isPinned = localStorage.getItem('sidebarPinned') === 'true';
+
+  // Set initial state
+  if (isPinned) {
+    sidebar.classList.add('pinned');
+    appLayout.classList.add('sidebar-pinned');
+    hoverTrigger.style.display = 'none';
+  }
+
+  // Pin/unpin handler
+  sidebarPinBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const currentlyPinned = sidebar.classList.contains('pinned');
+
+    if (currentlyPinned) {
+      sidebar.classList.remove('pinned');
+      appLayout.classList.remove('sidebar-pinned');
+      hoverTrigger.style.display = '';
+      localStorage.setItem('sidebarPinned', 'false');
+    } else {
+      sidebar.classList.add('pinned');
+      appLayout.classList.add('sidebar-pinned');
+      hoverTrigger.style.display = 'none';
+      localStorage.setItem('sidebarPinned', 'true');
+    }
+  });
+
+  // Hover behavior - show sidebar on hover of trigger or sidebar itself
+  let hideTimeout;
+  
+  function showSidebar() {
+    if (!sidebar.classList.contains('pinned')) {
+      clearTimeout(hideTimeout);
+      sidebar.style.transform = 'translateX(0)';
+    }
+  }
+
+  function hideSidebar() {
+    if (!sidebar.classList.contains('pinned')) {
+      clearTimeout(hideTimeout);
+      hideTimeout = setTimeout(() => {
+        sidebar.style.transform = 'translateX(-100%)';
+      }, 300); // Delay to allow smooth transition from trigger to sidebar
+    }
+  }
+
+  hoverTrigger.addEventListener('mouseenter', showSidebar);
+  sidebar.addEventListener('mouseenter', showSidebar);
+  hoverTrigger.addEventListener('mouseleave', hideSidebar);
+  sidebar.addEventListener('mouseleave', hideSidebar);
+}
+
+// ============================================
 // INITIALIZATION
 // ============================================
 
 document.addEventListener('DOMContentLoaded', async () => {
   // Load password list
   loadPasswordList().catch(() => {});
+
+  // Initialize sidebar
+  initSidebar();
 
   // Initialize UI components
   renderFeedForm();

@@ -42,20 +42,40 @@
     <div id="creds-history" class="creds-history" hidden></div>
   </header>
 
+  <!-- Sidebar Hover Trigger -->
+  <div class="sidebar-hover-trigger" aria-label="Show sidebar">
+    <div class="sidebar-indicator">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="9 18 15 12 9 6"/>
+      </svg>
+    </div>
+  </div>
+
   <!-- Main Layout -->
   <div class="app-layout">
     <!-- Sidebar -->
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <button type="button" class="sidebar-pin-btn" id="sidebar-pin" aria-label="Pin sidebar" title="Pin sidebar">
+          <svg class="pin-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="6" y1="9" x2="18" y2="9"/>
+            <path d="M6 9V21l6-3 6 3V9"/>
+            <path d="M9 3v6M15 3v6"/>
+          </svg>
+          <svg class="pin-icon pinned" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="6" y1="9" x2="18" y2="9"/>
+            <path d="M6 9V21l6-3 6 3V9" fill="currentColor"/>
+            <path d="M9 3v6M15 3v6" fill="currentColor"/>
+          </svg>
+        </button>
+      </div>
       <div class="sidebar-inner">
         <!-- Feed Controls -->
         <div class="panel" id="feed-settings">
-          <button type="button" class="panel-header" aria-expanded="true" aria-controls="feed-panel-content">
+          <div class="panel-header">
             <span class="panel-title">Feeds</span>
             <span class="panel-status" id="feed-status-count"></span>
-            <svg class="panel-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
-          </button>
+          </div>
           <div class="panel-content" id="feed-panel-content">
             <div class="feed-controls">
               <div class="feed-actions">
@@ -76,7 +96,7 @@
 
         <!-- Cred of the Week Widget -->
         <div class="panel" id="cred-of-week">
-          <div class="panel-header static">
+          <div class="panel-header">
             <span class="panel-title">Cred of the Week</span>
             <button type="button" class="icon-btn-sm" id="refresh-cred" aria-label="Refresh credential" title="Get new credential">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
