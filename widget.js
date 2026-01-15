@@ -5,7 +5,7 @@ const GITHUB_API =
   + "Passwords/Default-Credentials";
 const ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
 const CACHE_KEY = "secListCache";
-const MAX_FILES_TO_LOAD = 10; // prevent dozens of fetches on first load
+const MAX_FILES_TO_LOAD = 10;
 
 function sampleArray(list, limit) {
   if (limit >= list.length) return list;
@@ -51,52 +51,34 @@ async function loadCredCache() {
 }
 
 async function renderCredOfWeek() {
-  const aside = document.getElementById("cred-of-week");
-  if (!aside) return;
+  const contentArea = document.getElementById("cred-widget-content");
+  if (!contentArea) return;
+
   try {
     const { list, idx } = await loadCredCache();
     if (!list.length) throw new Error("no creds");
     const entry = list[idx];
-    aside.innerHTML = `
-  <div class="cred-widget-header">
-    <h3>🔑 Default Cred of the Week</h3>
-    <a href="#" id="refresh-cred" class="cred-refresh-link" title="Refresh Credential">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M23 4v6h-6"></path>
-        <path d="M1 20v-6h6"></path>
-        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
-        <path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"></path>
-      </svg>
-    </a>
-  </div>
-  <p class="cred-entry">${entry.text}</p>
-  <div class="cred-meta"><span><em>Source file:</em> ${entry.file}</span></div>
-  <div class="cred-links"><a href="${entry.source}" target="_blank">View raw list</a></div>
-  <div class="cred-meta cred-count">(entry #${idx + 1} of ${list.length})</div>
-  <div class="cred-footnote">Credit goes to <a href="https://github.com/danielmiessler/SecLists" target="_blank">SecLists</a></div>
-`;
 
-    const refreshButton = document.getElementById('refresh-cred');
-    if (refreshButton) {
-      refreshButton.addEventListener('click', (event) => {
-        event.preventDefault();
-        refreshCredOfWeek();
-      });
-    }
+    contentArea.innerHTML = `
+      <p class="cred-entry">${entry.text}</p>
+      <div class="cred-meta"><em>Source:</em> ${entry.file}</div>
+      <div class="cred-links"><a href="${entry.source}" target="_blank" rel="noopener">View raw list</a></div>
+      <div class="cred-count">Entry #${idx + 1} of ${list.length}</div>
+      <div class="cred-footnote">Data from <a href="https://github.com/danielmiessler/SecLists" target="_blank" rel="noopener">SecLists</a></div>
+    `;
   } catch (e) {
     console.error("Cred of the Week failed:", e);
     const fallbackUser = "admin";
     const fallbackPass = "password";
-    aside.innerHTML = `
-      <div class="cred-widget-header">
-        <h3>🔑 Default Cred of the Week</h3>
-        <button class="retry-button" type="button">Try again</button>
-      </div>
-      <p class="status error">Can’t reach SecLists right now.</p>
+
+    contentArea.innerHTML = `
+      <p class="status error">Can't reach SecLists right now.</p>
       <p class="cred-entry">${fallbackUser}:${fallbackPass}</p>
-      <p class="cred-footnote">Showing a placeholder credential until we reconnect.</p>
+      <p class="cred-footnote">Showing a placeholder credential.</p>
+      <button class="retry-button" type="button">Try again</button>
     `;
-    const retry = aside.querySelector('.retry-button');
+
+    const retry = contentArea.querySelector('.retry-button');
     if (retry) {
       retry.addEventListener('click', () => {
         localStorage.removeItem(CACHE_KEY);
@@ -117,4 +99,15 @@ async function refreshCredOfWeek() {
   await renderCredOfWeek();
 }
 
-document.addEventListener('DOMContentLoaded', renderCredOfWeek);
+document.addEventListener('DOMContentLoaded', () => {
+  renderCredOfWeek();
+
+  // Bind refresh button
+  const refreshBtn = document.getElementById('refresh-cred');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', (event) => {
+      event.preventDefault();
+      refreshCredOfWeek();
+    });
+  }
+});

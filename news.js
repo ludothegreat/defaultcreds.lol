@@ -1,6 +1,9 @@
-// news.js
+// news.js - Refactored for Intelligence Console UI
 
-// 1) Feeds list
+// ============================================
+// FEED CONFIGURATION
+// ============================================
+
 const feeds = [
   { url: 'https://krebsonsecurity.com/feed/', name: 'Krebs on Security', category: 'Newsrooms' },
   { url: 'https://www.bleepingcomputer.com/feed/', name: 'BleepingComputer', category: 'Newsrooms' },
@@ -11,7 +14,13 @@ const feeds = [
   { url: 'https://feeds.feedburner.com/Securityweek', name: 'SecurityWeek', category: 'Newsrooms' }
 ];
 
-// 2) Color helpers (generate unique accent per feed)
+const feedMap = new Map(feeds.map(feed => [feed.url, feed]));
+const DEFAULT_FEED_ORDER = feeds.map(feed => feed.url);
+
+// ============================================
+// COLOR GENERATION
+// ============================================
+
 const feedColorCache = new Map();
 const usedHueAngles = [];
 const categoryColorCache = new Map();
@@ -72,10 +81,8 @@ function getCategoryColors(name) {
   return colors;
 }
 
-const feedMap = new Map(feeds.map(feed => [feed.url, feed]));
-const DEFAULT_FEED_ORDER = feeds.map(feed => feed.url);
-
-let feedOrder = (() => {
+// Pre-generate colors
+feedOrder = (() => {
   try {
     const stored = JSON.parse(localStorage.getItem('feedOrder') || 'null');
     if (Array.isArray(stored)) {
@@ -99,6 +106,10 @@ if (feedOrderChanged) {
 }
 
 feedOrder.forEach(url => getFeedColors(url));
+
+// ============================================
+// STATE MANAGEMENT
+// ============================================
 
 const storedSelectedFeedsValue = localStorage.getItem('selectedFeeds');
 let selectedFeeds = (() => {
@@ -141,22 +152,24 @@ if (!storedSelectedFeedsValue) {
   });
 }
 
-// 3) Proxy & parser
+// Sort state
+let currentSort = localStorage.getItem('sortMode') || 'newest';
+
+// Feed status tracking
+const feedStatus = new Map();
+let lastUpdateTime = null;
+
+// ============================================
+// PROXY & PARSER
+// ============================================
+
 const CORS_PROXY = "https://api.allorigins.win/raw?url=";
 const parser = new RSSParser();
 const PASSWORD_WORDLIST_URL = 'top_1000_passwords.txt';
 
 const fallbackPasswords = [
-  '123456',
-  'password',
-  '123456789',
-  'qwerty',
-  '12345',
-  '12345678',
-  '111111',
-  '1234567',
-  'sunshine',
-  'iloveyou',
+  '123456', 'password', '123456789', 'qwerty', '12345',
+  '12345678', '111111', '1234567', 'sunshine', 'iloveyou',
 ];
 
 let passwordList = [...fallbackPasswords];
@@ -186,53 +199,74 @@ function loadPasswordList() {
   return passwordListPromise;
 }
 
-// 5) Render the feed‑picker form (enhanced)
-function renderFeedForm() {
-  const container = document.getElementById('feed-settings');
-  if (!container) return;
+// ============================================
+// FEED PANEL
+// ============================================
 
-  let details = container.querySelector('details');
-  if (!details) {
-    details = document.createElement('details');
-    details.innerHTML = '<summary>Select Feeds</summary>';
-    container.appendChild(details);
-  }
-  details.open = feedPanelOpen;
-  if (!details.dataset.bound) {
-    details.addEventListener('toggle', () => {
-      feedPanelOpen = details.open;
+function renderFeedForm() {
+  const panelHeader = document.querySelector('#feed-settings .panel-header');
+  const panelContent = document.getElementById('feed-panel-content');
+
+  if (!panelHeader || !panelContent) return;
+
+  // Set initial expanded state
+  panelHeader.setAttribute('aria-expanded', feedPanelOpen ? 'true' : 'false');
+
+  // Toggle handler
+  if (!panelHeader.dataset.bound) {
+    panelHeader.addEventListener('click', () => {
+      feedPanelOpen = !feedPanelOpen;
+      panelHeader.setAttribute('aria-expanded', feedPanelOpen ? 'true' : 'false');
       localStorage.setItem('feedPanelOpen', feedPanelOpen ? 'true' : 'false');
     });
-    details.dataset.bound = 'true';
+    panelHeader.dataset.bound = 'true';
   }
 
-  let form = details.querySelector('form');
-  if (!form) {
-    form = document.createElement('form');
-    form.id = 'feed-form';
-    details.appendChild(form);
+  // Feed actions
+  const feedActions = panelContent.querySelector('.feed-actions');
+  if (feedActions && !feedActions.dataset.bound) {
+    feedActions.addEventListener('click', event => {
+      const button = event.target.closest('button[data-action]');
+      if (!button) return;
+
+      event.preventDefault();
+      const action = button.dataset.action;
+
+      if (action === 'select-all') {
+        selectedFeeds = feedOrder.filter(url => isFeedInActiveCategory(url));
+      } else if (action === 'select-none') {
+        selectedFeeds = [];
+      }
+
+      localStorage.setItem('selectedFeeds', JSON.stringify(selectedFeeds));
+      renderFeedOptions(feedOptionsContainer);
+      updateFeedStatusCount();
+      loadNews();
+    });
+    feedActions.dataset.bound = 'true';
   }
 
-  let controls = form.querySelector('.feed-controls');
-  if (!controls) {
-    controls = document.createElement('div');
-    controls.className = 'feed-controls';
-    controls.innerHTML = `
-      <div class="feed-controls-buttons">
-        <button type="button" data-action="select-all">Select all</button>
-        <button type="button" data-action="select-none">Select none</button>
-      </div>
-      <div class="feed-category-chips" role="group" aria-label="Toggle feed categories"></div>
-      <input type="search" class="feed-search" placeholder="Filter feeds" aria-label="Filter feeds">
-    `;
-    form.appendChild(controls);
+  // Category chips
+  const chipContainer = panelContent.querySelector('.feed-category-chips');
+  if (chipContainer && !chipContainer.dataset.bound) {
+    renderCategoryChips(chipContainer);
+    chipContainer.addEventListener('click', event => {
+      const chip = event.target.closest('.feed-category-chip');
+      if (chip && chip.dataset.category) {
+        toggleCategory(chip.dataset.category);
+        renderCategoryChips(chipContainer);
+        renderFeedOptions(feedOptionsContainer);
+        updateFeedStatusCount();
+        loadNews();
+      }
+    });
+    chipContainer.dataset.bound = 'true';
   }
 
-  const searchInput = controls.querySelector('.feed-search');
+  // Feed search
+  const searchInput = panelContent.querySelector('.feed-search');
   if (searchInput) {
-    if (searchInput.value !== feedFilterTerm) {
-      searchInput.value = feedFilterTerm;
-    }
+    searchInput.value = feedFilterTerm;
     if (!searchInput.dataset.bound) {
       searchInput.addEventListener('input', () => {
         feedFilterTerm = searchInput.value;
@@ -247,51 +281,10 @@ function renderFeedForm() {
     }
   }
 
-  if (!controls.dataset.bound) {
-    controls.addEventListener('click', event => {
-      const button = event.target.closest('button[data-action]');
-      if (button) {
-        event.preventDefault();
-        const action = button.dataset.action;
-        if (action === 'select-all') {
-          selectedFeeds = feedOrder.filter(url => isFeedInActiveCategory(url));
-        } else if (action === 'select-none') {
-          selectedFeeds = [];
-        }
-        localStorage.setItem('selectedFeeds', JSON.stringify(selectedFeeds));
-        renderFeedOptions(feedOptionsContainer);
-        loadNews();
-        return;
-      }
-      const chip = event.target.closest('.feed-category-chip');
-      if (chip && chip.dataset.category) {
-        const category = chip.dataset.category;
-        toggleCategory(category);
-        renderCategoryChips(controls.querySelector('.feed-category-chips'));
-        renderFeedOptions(feedOptionsContainer);
-        loadNews();
-      }
-    });
-    controls.dataset.bound = 'true';
-  }
-
-  const chipContainer = controls.querySelector('.feed-category-chips');
-  renderCategoryChips(chipContainer);
-
-  feedOptionsContainer = form.querySelector('.feed-list');
-  if (!feedOptionsContainer) {
-    feedOptionsContainer = document.createElement('div');
-    feedOptionsContainer.className = 'feed-list';
-    form.appendChild(feedOptionsContainer);
-  }
-
+  // Feed list
+  feedOptionsContainer = document.getElementById('feed-list');
   renderFeedOptions(feedOptionsContainer);
-
-  if (!form.dataset.bound) {
-    form.addEventListener('change', handleFeedFormChange);
-    form.addEventListener('click', handleFeedFormClick);
-    form.dataset.bound = 'true';
-  }
+  updateFeedStatusCount();
 }
 
 function feedCheckboxId(url) {
@@ -318,6 +311,7 @@ function renderFeedOptions(container) {
     const active = isFeedInActiveCategory(feed.url);
     const matchesFilter = !normalizedFilter || feed.name.toLowerCase().includes(normalizedFilter);
     if (!matchesFilter) return;
+
     const feedColors = getFeedColors(feed.url);
     const categoryColors = getCategoryColors(feed.category || 'Feeds');
 
@@ -329,7 +323,7 @@ function renderFeedOptions(container) {
     option.dataset.active = active ? 'true' : 'false';
     option.dataset.selected = isSelected ? 'true' : 'false';
 
-    const borderColor = (active && isSelected) ? feedColors.primary : (active ? 'var(--muted-color)' : 'transparent');
+    const borderColor = (active && isSelected) ? feedColors.primary : (active ? 'var(--color-border)' : 'transparent');
     option.style.borderLeftColor = borderColor;
 
     const label = document.createElement('label');
@@ -354,16 +348,6 @@ function renderFeedOptions(container) {
     const categoryBadge = document.createElement('span');
     categoryBadge.className = 'feed-category-pill';
     categoryBadge.textContent = feed.category || 'Feeds';
-    const badgeActive = active && isSelected;
-    if (badgeActive) {
-      categoryBadge.style.borderColor = categoryColors.border;
-      categoryBadge.style.background = categoryColors.border;
-      categoryBadge.style.color = '#fff';
-    } else {
-      categoryBadge.style.borderColor = 'var(--muted-color)';
-      categoryBadge.style.background = 'transparent';
-      categoryBadge.style.color = 'var(--muted-color)';
-    }
 
     label.append(checkbox, nameSpan, categoryBadge);
     option.appendChild(label);
@@ -392,6 +376,11 @@ function renderFeedOptions(container) {
     actions.append(upBtn, downBtn);
     option.appendChild(actions);
 
+    // Event handlers
+    checkbox.addEventListener('change', handleFeedCheckboxChange);
+    upBtn.addEventListener('click', (e) => handleFeedMove(e, feed, 'up'));
+    downBtn.addEventListener('click', (e) => handleFeedMove(e, feed, 'down'));
+
     container.appendChild(option);
   });
 
@@ -401,58 +390,57 @@ function renderFeedOptions(container) {
     emptyMessage.textContent = 'No feeds match that filter.';
     container.appendChild(emptyMessage);
   }
-
-  updateFeedControlButtons();
 }
 
-function handleFeedFormChange(event) {
-  const checkbox = event.target.closest('input[type="checkbox"]');
-  if (!checkbox) return;
-  const form = event.currentTarget;
-  selectedFeeds = Array.from(form.querySelectorAll('input[type="checkbox"]'))
-    .filter(input => input.checked)
-    .map(input => input.value)
-    .filter(url => feedMap.has(url));
+function handleFeedCheckboxChange(event) {
+  const checkbox = event.target;
+  const url = checkbox.value;
+
+  if (checkbox.checked) {
+    if (!selectedFeeds.includes(url)) {
+      selectedFeeds.push(url);
+    }
+  } else {
+    selectedFeeds = selectedFeeds.filter(u => u !== url);
+  }
+
   localStorage.setItem('selectedFeeds', JSON.stringify(selectedFeeds));
-  updateFeedControlButtons();
+  updateFeedStatusCount();
   loadNews();
 }
 
-function handleFeedFormClick(event) {
-  const moveButton = event.target.closest('.feed-move');
-  if (moveButton && moveButton.dataset.move) {
-    event.preventDefault();
-    const option = moveButton.closest('.feed-option');
-    if (!option) return;
-    const url = option.dataset.feedUrl;
-    const feed = feedMap.get(url);
-    const currentIndex = feedOrder.indexOf(url);
-    if (currentIndex === -1) return;
-    if (moveButton.dataset.move === 'up' && currentIndex > 0) {
-      [feedOrder[currentIndex - 1], feedOrder[currentIndex]] = [feedOrder[currentIndex], feedOrder[currentIndex - 1]];
-    } else if (moveButton.dataset.move === 'down' && currentIndex < feedOrder.length - 1) {
-      [feedOrder[currentIndex + 1], feedOrder[currentIndex]] = [feedOrder[currentIndex], feedOrder[currentIndex + 1]];
-    } else {
-      return;
-    }
-    localStorage.setItem('feedOrder', JSON.stringify(feedOrder));
-    renderFeedOptions(feedOptionsContainer);
-    applyFeedOrderToDom();
-    const refreshedOption = feedOptionsContainer && feed
-      ? feedOptionsContainer.querySelector(`[data-feed-url="${feed.url}"] input[type="checkbox"]`)
-      : null;
-    if (refreshedOption) refreshedOption.focus();
+function handleFeedMove(event, feed, direction) {
+  event.preventDefault();
+  const currentIndex = feedOrder.indexOf(feed.url);
+  if (currentIndex === -1) return;
+
+  if (direction === 'up' && currentIndex > 0) {
+    [feedOrder[currentIndex - 1], feedOrder[currentIndex]] = [feedOrder[currentIndex], feedOrder[currentIndex - 1]];
+  } else if (direction === 'down' && currentIndex < feedOrder.length - 1) {
+    [feedOrder[currentIndex + 1], feedOrder[currentIndex]] = [feedOrder[currentIndex], feedOrder[currentIndex + 1]];
+  } else {
+    return;
   }
+
+  localStorage.setItem('feedOrder', JSON.stringify(feedOrder));
+  renderFeedOptions(feedOptionsContainer);
+  applyFeedOrderToDom();
 }
 
 function applyFeedOrderToDom() {
   const container = document.getElementById('news-feed');
   if (!container) return;
-  const sectionMap = new Map(Array.from(container.querySelectorAll('.feed-section')).map(section => [section.id, section]));
+
+  const sectionMap = new Map(
+    Array.from(container.querySelectorAll('.feed-section'))
+      .map(section => [section.id, section])
+  );
+
   feedOrder.forEach(url => {
     const feed = feedMap.get(url);
     if (!feed) return;
     if (!isFeedInActiveCategory(url)) return;
+
     const sectionId = 'sec-' + feedKey(feed);
     const section = sectionMap.get(sectionId);
     if (section) {
@@ -463,46 +451,94 @@ function applyFeedOrderToDom() {
   });
 }
 
-function updateFeedControlButtons() {
-  const controls = document.querySelector('#feed-form .feed-controls');
-  if (!controls) return;
-  const allBtn = controls.querySelector('button[data-action="select-all"]');
-  const noneBtn = controls.querySelector('button[data-action="select-none"]');
-  if (allBtn) {
-    const selectableCount = feedOrder.filter(url => isFeedInActiveCategory(url)).length;
-    const selectedCount = selectedFeeds.filter(url => isFeedInActiveCategory(url)).length;
-    allBtn.disabled = selectableCount > 0 && selectedCount === selectableCount;
-  }
-  if (noneBtn) {
-    noneBtn.disabled = selectedFeeds.filter(url => isFeedInActiveCategory(url)).length === 0;
+function updateFeedStatusCount() {
+  const countEl = document.getElementById('feed-status-count');
+  if (countEl) {
+    const activeCount = selectedFeeds.filter(url => isFeedInActiveCategory(url)).length;
+    const totalCount = feeds.length;
+    countEl.textContent = `${activeCount}/${totalCount}`;
   }
 }
 
-// 6) Helpers for cache keys
+// ============================================
+// CATEGORY CHIPS
+// ============================================
+
+function getAllCategories() {
+  return Array.from(new Set(feeds.map(feed => feed.category || 'Feeds')));
+}
+
+function renderCategoryChips(container) {
+  if (!container) return;
+  container.innerHTML = '';
+
+  const categories = getAllCategories();
+  categories.forEach(category => {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'feed-category-chip';
+    chip.dataset.category = category;
+    chip.textContent = category;
+
+    const isActive = activeFeedCategories.includes(category);
+    chip.dataset.state = isActive ? 'active' : 'inactive';
+
+    container.appendChild(chip);
+  });
+}
+
+function toggleCategory(category) {
+  const index = activeFeedCategories.indexOf(category);
+  if (index === -1) {
+    activeFeedCategories.push(category);
+  } else {
+    activeFeedCategories.splice(index, 1);
+  }
+  if (!activeFeedCategories.length) {
+    activeFeedCategories = getAllCategories();
+  }
+  localStorage.setItem('activeFeedCategories', JSON.stringify(activeFeedCategories));
+}
+
+function isFeedInActiveCategory(url) {
+  const feed = feedMap.get(url);
+  const category = feed ? (feed.category || 'Feeds') : 'Feeds';
+  return activeFeedCategories.includes(category);
+}
+
+// ============================================
+// FETCH & PARSE
+// ============================================
+
 function feedKey(feed) {
   return btoa(feed.url).replace(/=/g, '');
 }
 
-// 7) Fetch raw XML
 async function fetchXml(feed) {
+  const startTime = Date.now();
   const maxRetries = 3;
+
   for (let i = 0; i < maxRetries; i++) {
     try {
       const res = await fetch(CORS_PROXY + encodeURIComponent(feed.url));
       if (!res.ok) throw new Error(`Proxy ${res.status}`);
+
+      const elapsed = Date.now() - startTime;
+      feedStatus.set(feed.url, { status: elapsed > 3000 ? 'slow' : 'loaded', time: elapsed });
+
       return await res.text();
     } catch (err) {
       console.warn(`Fetch attempt ${i + 1} failed for ${feed.name}:`, err);
       if (i === maxRetries - 1) {
+        feedStatus.set(feed.url, { status: 'failed', error: err.message });
         err.isProxyError = true;
-        throw err; // Re-throw the error after the last attempt
+        throw err;
       }
-      await new Promise(resolve => setTimeout(resolve, 500)); // Wait before retrying
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
   }
 }
 
-// 8) Parse XML to JS
 async function parseXml(xml) {
   try {
     return await parser.parseString(xml);
@@ -512,54 +548,80 @@ async function parseXml(xml) {
   }
 }
 
-// 9) Render items under a section
+// ============================================
+// SKELETON PLACEHOLDERS
+// ============================================
+
+function createSkeletonArticles(count = 3) {
+  const fragment = document.createDocumentFragment();
+
+  for (let i = 0; i < count; i++) {
+    const skeleton = document.createElement('div');
+    skeleton.className = 'skeleton-article';
+    skeleton.innerHTML = `
+      <div class="skeleton skeleton-title"></div>
+      <div class="skeleton skeleton-meta"></div>
+    `;
+    fragment.appendChild(skeleton);
+  }
+
+  return fragment;
+}
+
+// ============================================
+// RENDER ITEMS
+// ============================================
+
 function renderItems(section, feedName, items) {
-  section.querySelectorAll('.retry-button').forEach(button => button.remove());
-  section.querySelectorAll('article').forEach(a => a.remove());
+  // Clear existing content
+  section.querySelectorAll('.retry-button, article, .skeleton-article').forEach(el => el.remove());
+
   if (!items.length) {
-    // Ensure retry button is removed even if no items are found
-    section.querySelectorAll('.retry-button').forEach(button => button.remove());
     const none = document.createElement('p');
     none.className = 'status';
     none.textContent = 'No items found.';
     section.appendChild(none);
     return;
   }
+
   items.slice(0, 5).forEach(item => {
     const art = document.createElement('article');
+    art.dataset.pubDate = item.pubDate ? new Date(item.pubDate).getTime() : 0;
+    art.dataset.source = feedName;
 
-    // Format the date
     const pubDate = new Date(item.pubDate);
     const formattedDate = `${(pubDate.getMonth() + 1).toString().padStart(2, '0')}-${pubDate.getDate().toString().padStart(2, '0')}-${pubDate.getFullYear()}`;
-    
-    // Format the time in 12-hour format
+
     let hours = pubDate.getHours();
     const minutes = pubDate.getMinutes().toString().padStart(2, '0');
     const ampm = hours >= 12 ? 'PM' : 'AM';
- hours = hours % 12;
- hours = hours ? hours : 12; // the hour '0' should be '12'
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+
     art.innerHTML = `
-      <header><h3><a href="${item.link}" target="_blank">${item.title}</a></h3></header>
+      <header><h3><a href="${item.link}" target="_blank" rel="noopener">${item.title}</a></h3></header>
       <footer>
- <small>
- ${formattedDate} - ${hours}:${minutes} ${ampm} | ${feedName}${item.author ? ` - ${item.author}` : ''}
-        </small>
- </footer>
+        <small>${formattedDate} - ${hours}:${minutes} ${ampm} | ${feedName}${item.author ? ` - ${item.author}` : ''}</small>
+      </footer>
     `;
+
     const link = art.querySelector('a');
     if (link) {
       link.dataset.originalTitle = item.title;
     }
+
     section.appendChild(art);
   });
 }
 
-// 10) For each feed: placeholder + cache + background fetch
+// ============================================
+// HANDLE FEED
+// ============================================
+
 async function handleFeed(feed) {
   const container = document.getElementById('news-feed');
   const sectionId = 'sec-' + feedKey(feed);
 
-  // build section if absent
   let section = document.getElementById(sectionId);
   if (!section) {
     section = document.createElement('section');
@@ -576,90 +638,135 @@ async function handleFeed(feed) {
     });
     section.appendChild(h2);
 
-    const status = document.createElement('p');
-    status.className = 'status';
-    status.textContent = 'Loading…';
-    section.appendChild(status);
+    // Add skeleton placeholders
+    section.appendChild(createSkeletonArticles(3));
+
+    container.appendChild(section);
   }
+
   const colors = getFeedColors(feed.url);
   section.style.borderLeftColor = colors.primary;
-  // Remove any existing error class before attempting to load
   section.classList.remove('feed-error');
-  const status = section.querySelector('.status');
+
   const cacheKey = 'xmlCache_' + feedKey(feed);
   const raw = localStorage.getItem(cacheKey);
 
-  // 10a) render from cache immediately
+  // Render from cache immediately
   if (raw) {
     try {
       const { xml } = JSON.parse(raw);
       const data = await parseXml(xml);
-      status.remove();
+      section.querySelectorAll('.status, .skeleton-article').forEach(el => el.remove());
       renderItems(section, feed.name, data.items);
     } catch (e) {
       console.warn('Cache parse error', e);
     }
   }
 
-  // 10b) fetch fresh in background
+  // Fetch fresh in background
   try {
     const freshXml = await fetchXml(feed);
     const prevXml = raw ? JSON.parse(raw).xml : null;
+
     if (freshXml !== prevXml) {
-      localStorage.setItem(cacheKey,
-        JSON.stringify({ timestamp: Date.now(), xml: freshXml })
-      );
+      localStorage.setItem(cacheKey, JSON.stringify({ timestamp: Date.now(), xml: freshXml }));
       const freshData = await parseXml(freshXml);
-      section.querySelectorAll('.status, article').forEach(n => n.remove());
+      section.querySelectorAll('.status, article, .skeleton-article').forEach(n => n.remove());
       renderItems(section, feed.name, freshData.items);
     }
+
+    lastUpdateTime = new Date();
+    updateSystemStatus();
   } catch (err) {
-    // Remove any existing retry button before showing the error
-    section.querySelectorAll('.retry-button').forEach(button => button.remove());
+    section.querySelectorAll('.retry-button, .skeleton-article').forEach(el => el.remove());
 
     console.error(`Failed to update ${feed.name}`, err);
-    if (section.querySelector('.status')) {
-      // More specific error messages
+
+    // Only show error if we don't have cached content
+    if (!section.querySelector('article')) {
+      const status = document.createElement('p');
+      status.className = 'status error';
+
       if (err.isProxyError) {
-        status.textContent = `Couldn’t load ${feed.name}: News CORS proxy unavailable.`;
+        status.textContent = `Couldn't load ${feed.name}: News CORS proxy unavailable.`;
       } else if (err.isParserError) {
-        status.textContent = `Couldn’t load ${feed.name}: RSS parser failed (possibly CDN down).`;
+        status.textContent = `Couldn't load ${feed.name}: RSS parser failed.`;
       } else {
-        status.textContent = `Couldn’t load ${feed.name}.`;
+        status.textContent = `Couldn't load ${feed.name}.`;
       }
-      status.classList.add('error');
-      // Add visual indicator for failed feed
+
+      section.appendChild(status);
       section.classList.add('feed-error');
-
-      // Only add the retry button if one doesn't already exist
-      if (!section.querySelector('.retry-button')) {
-        const retryButton = document.createElement('button');
-        retryButton.textContent = 'Retry';
-        retryButton.classList.add('retry-button'); // Add a class for easy selection
-        retryButton.addEventListener('click', () => handleFeed(feed));
-        section.appendChild(retryButton);
-      }
-
     }
+
+    const retryButton = document.createElement('button');
+    retryButton.textContent = 'Retry';
+    retryButton.classList.add('retry-button');
+    retryButton.addEventListener('click', () => handleFeed(feed));
+    section.appendChild(retryButton);
+
+    updateSystemStatus();
   }
+
   return section;
 }
 
-let animationInterval;
+// ============================================
+// SYSTEM STATUS
+// ============================================
 
-function animatePassword() {
-  const el = document.getElementById('password-animation');
-  if (!el) return;
-  if (!passwordList.length) {
-    passwordList = [...fallbackPasswords];
+function updateSystemStatus() {
+  // Update last updated time
+  const lastUpdatedEl = document.getElementById('last-updated');
+  if (lastUpdatedEl && lastUpdateTime) {
+    const now = new Date();
+    const diff = Math.floor((now - lastUpdateTime) / 1000);
+
+    if (diff < 60) {
+      lastUpdatedEl.textContent = 'Just now';
+    } else if (diff < 3600) {
+      const mins = Math.floor(diff / 60);
+      lastUpdatedEl.textContent = `${mins}m ago`;
+    } else {
+      lastUpdatedEl.textContent = lastUpdateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
   }
 
-  let i = 0;
-  animationInterval = setInterval(() => {
-    el.value = passwordList[i];
-    i = (i + 1) % passwordList.length;
-  }, 200);
+  // Update feed health indicators
+  const feedHealthEl = document.getElementById('feed-health');
+  if (feedHealthEl) {
+    const loaded = Array.from(feedStatus.values()).filter(s => s.status === 'loaded').length;
+    const slow = Array.from(feedStatus.values()).filter(s => s.status === 'slow').length;
+    const failed = Array.from(feedStatus.values()).filter(s => s.status === 'failed').length;
+
+    feedHealthEl.innerHTML = '';
+
+    if (loaded > 0) {
+      const indicator = document.createElement('span');
+      indicator.className = 'feed-status-indicator loaded';
+      indicator.textContent = `${loaded} OK`;
+      feedHealthEl.appendChild(indicator);
+    }
+
+    if (slow > 0) {
+      const indicator = document.createElement('span');
+      indicator.className = 'feed-status-indicator slow';
+      indicator.textContent = `${slow} Slow`;
+      feedHealthEl.appendChild(indicator);
+    }
+
+    if (failed > 0) {
+      const indicator = document.createElement('span');
+      indicator.className = 'feed-status-indicator failed';
+      indicator.textContent = `${failed} Failed`;
+      feedHealthEl.appendChild(indicator);
+    }
+  }
 }
+
+// ============================================
+// SEARCH & FILTER
+// ============================================
 
 function escapeRegExp(string) {
   return string.replace(/([.*+?^${}()|[\]\\])/g, '\\$1');
@@ -668,11 +775,19 @@ function escapeRegExp(string) {
 function applySearchFilter(rawTerm = '') {
   const searchBar = document.getElementById('search-bar');
   const filterStatus = document.getElementById('filter-status');
+  const searchClear = document.getElementById('search-clear');
+  const emptyState = document.getElementById('empty-state');
+
   const termFromInput = typeof rawTerm === 'string' ? rawTerm : (searchBar ? searchBar.value : '');
   const trimmedTerm = termFromInput.trim();
   const normalizedTerm = trimmedTerm.toLowerCase();
   const articles = document.querySelectorAll('#news-feed article');
   let visibleCount = 0;
+
+  // Show/hide clear button
+  if (searchClear) {
+    searchClear.hidden = !trimmedTerm;
+  }
 
   articles.forEach(article => {
     const link = article.querySelector('h3 a');
@@ -699,79 +814,29 @@ function applySearchFilter(rawTerm = '') {
     if (matches) visibleCount += 1;
   });
 
+  // Update filter status
   if (filterStatus) {
-    if (normalizedTerm.length && visibleCount === 0) {
+    if (normalizedTerm.length) {
       filterStatus.hidden = false;
-      filterStatus.textContent = `No articles found for "${trimmedTerm}".`;
-    } else if (normalizedTerm.length) {
-      filterStatus.hidden = false;
-      filterStatus.textContent = `Showing ${visibleCount} article${visibleCount === 1 ? '' : 's'} matching "${trimmedTerm}".`;
+      filterStatus.textContent = `${visibleCount} result${visibleCount === 1 ? '' : 's'}`;
     } else {
       filterStatus.hidden = true;
       filterStatus.textContent = '';
     }
   }
+
+  // Show empty state if no results and no articles at all
+  if (emptyState) {
+    const hasArticles = document.querySelectorAll('#news-feed article').length > 0;
+    emptyState.hidden = hasArticles || visibleCount > 0 || selectedFeeds.length === 0;
+  }
 }
 
-// 11) Load all selected feeds
-async function loadNews() {
-  const container = document.getElementById('news-feed');
-  const loadingIndicator = document.getElementById('loading-indicator');
-  const filterStatus = document.getElementById('filter-status');
-  
-  // Clear previous content and reset filter messaging
-  container.innerHTML = '';
-  if (filterStatus) {
-    filterStatus.hidden = true;
-    filterStatus.textContent = '';
-  }
-  const selected = getFeedsInOrder(true);
-  if (!selected.length) {
-    if (loadingIndicator) {
-      loadingIndicator.classList.remove('visible');
-      loadingIndicator.setAttribute('aria-hidden', 'true');
-    }
-    clearInterval(animationInterval);
-    const emptyMessage = document.createElement('p');
-    emptyMessage.className = 'status';
-    emptyMessage.textContent = 'Select at least one feed from the sidebar to populate the news feed.';
-    container.appendChild(emptyMessage);
-    applyFeedOrderToDom();
-    return;
-  }
-
-  if (loadingIndicator) {
-    loadingIndicator.classList.add('visible');
-    loadingIndicator.setAttribute('aria-hidden', 'false');
-  }
-  animatePassword();
-
-  const results = await Promise.all(selected.map(f => handleFeed(f)));
-  
-  // Hide loading indicator and render results
-  if (loadingIndicator) {
-    loadingIndicator.classList.remove('visible');
-    loadingIndicator.setAttribute('aria-hidden', 'true');
-  }
-  clearInterval(animationInterval);
-  
-  results.forEach(section => container.appendChild(section));
-
+function initSearchFilter() {
   const searchBar = document.getElementById('search-bar');
-  if (searchBar) {
-    applySearchFilter(searchBar.value);
-  }
-
-  applyFeedOrderToDom();
-}
-
-// 12) Init on page load
-document.addEventListener('DOMContentLoaded', async () => {
-  loadPasswordList().catch(() => {});
-  renderFeedForm();
-
-  const searchBar = document.getElementById('search-bar');
+  const searchClear = document.getElementById('search-clear');
   const savedTerm = localStorage.getItem('newsSearchTerm');
+
   if (searchBar && savedTerm) {
     searchBar.value = savedTerm;
   }
@@ -787,55 +852,178 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  await loadNews();
-});
-function getAllCategories() {
-  return Array.from(new Set(feeds.map(feed => feed.category || 'Feeds')));
+  if (searchClear) {
+    searchClear.addEventListener('click', () => {
+      if (searchBar) {
+        searchBar.value = '';
+        localStorage.removeItem('newsSearchTerm');
+        applySearchFilter('');
+        searchBar.focus();
+      }
+    });
+  }
 }
 
-function renderCategoryChips(container) {
-  if (!container) return;
-  container.innerHTML = '';
-  const categories = getAllCategories();
-  categories.forEach(category => {
-    const colors = getCategoryColors(category);
-    const chip = document.createElement('button');
-    chip.type = 'button';
-    chip.className = 'feed-category-chip';
-    chip.dataset.category = category;
-    chip.textContent = category;
-    const isActive = activeFeedCategories.includes(category);
-    chip.dataset.state = isActive ? 'active' : 'inactive';
-    if (isActive) {
-      chip.style.borderColor = colors.border;
-      chip.style.background = colors.border;
-      chip.style.color = '#fff';
-      chip.style.opacity = '1';
-    } else {
-      chip.style.borderColor = 'var(--muted-color)';
-      chip.style.background = 'transparent';
-      chip.style.color = 'var(--muted-color)';
-      chip.style.opacity = '0.5';
-    }
-    container.appendChild(chip);
+// ============================================
+// SORTING
+// ============================================
+
+function initSortControl() {
+  const sortSelect = document.getElementById('sort-select');
+  if (!sortSelect) return;
+
+  sortSelect.value = currentSort;
+
+  sortSelect.addEventListener('change', () => {
+    currentSort = sortSelect.value;
+    localStorage.setItem('sortMode', currentSort);
+    applySorting();
   });
 }
 
-function toggleCategory(category) {
-  const index = activeFeedCategories.indexOf(category);
-  if (index === -1) {
-    activeFeedCategories.push(category);
+function applySorting() {
+  const container = document.getElementById('news-feed');
+  if (!container) return;
+
+  const sections = Array.from(container.querySelectorAll('.feed-section'));
+
+  if (currentSort === 'source') {
+    // Sort sections alphabetically by feed name
+    sections.sort((a, b) => {
+      const nameA = a.querySelector('h2')?.textContent || '';
+      const nameB = b.querySelector('h2')?.textContent || '';
+      return nameA.localeCompare(nameB);
+    });
   } else {
-    activeFeedCategories.splice(index, 1);
+    // For newest/oldest, sort articles within each section
+    sections.forEach(section => {
+      const articles = Array.from(section.querySelectorAll('article'));
+      articles.sort((a, b) => {
+        const dateA = parseInt(a.dataset.pubDate) || 0;
+        const dateB = parseInt(b.dataset.pubDate) || 0;
+        return currentSort === 'newest' ? dateB - dateA : dateA - dateB;
+      });
+      articles.forEach(article => section.appendChild(article));
+    });
+
+    // Then apply feed order
+    applyFeedOrderToDom();
+    return;
   }
-  if (!activeFeedCategories.length) {
-    activeFeedCategories = getAllCategories();
-  }
-  localStorage.setItem('activeFeedCategories', JSON.stringify(activeFeedCategories));
+
+  sections.forEach(section => container.appendChild(section));
 }
 
-function isFeedInActiveCategory(url) {
-  const feed = feedMap.get(url);
-  const category = feed ? (feed.category || 'Feeds') : 'Feeds';
-  return activeFeedCategories.includes(category);
+// ============================================
+// LOADING ANIMATION
+// ============================================
+
+let animationInterval;
+
+function animatePassword() {
+  const el = document.getElementById('password-animation');
+  if (!el) return;
+  if (!passwordList.length) {
+    passwordList = [...fallbackPasswords];
+  }
+
+  let i = 0;
+  animationInterval = setInterval(() => {
+    el.value = passwordList[i];
+    i = (i + 1) % passwordList.length;
+  }, 200);
 }
+
+// ============================================
+// LOAD NEWS
+// ============================================
+
+async function loadNews() {
+  const container = document.getElementById('news-feed');
+  const loadingIndicator = document.getElementById('loading-indicator');
+  const emptyState = document.getElementById('empty-state');
+
+  // Clear previous content
+  container.innerHTML = '';
+  feedStatus.clear();
+
+  if (emptyState) {
+    emptyState.hidden = true;
+  }
+
+  const selected = getFeedsInOrder(true);
+
+  if (!selected.length) {
+    if (loadingIndicator) {
+      loadingIndicator.classList.remove('visible');
+      loadingIndicator.setAttribute('aria-hidden', 'true');
+    }
+    clearInterval(animationInterval);
+
+    if (emptyState) {
+      emptyState.hidden = false;
+    }
+
+    return;
+  }
+
+  if (loadingIndicator) {
+    loadingIndicator.classList.add('visible');
+    loadingIndicator.setAttribute('aria-hidden', 'false');
+  }
+  animatePassword();
+
+  // Fetch feeds incrementally
+  const results = await Promise.all(selected.map(f => handleFeed(f)));
+
+  // Hide loading indicator
+  if (loadingIndicator) {
+    loadingIndicator.classList.remove('visible');
+    loadingIndicator.setAttribute('aria-hidden', 'true');
+  }
+  clearInterval(animationInterval);
+
+  // Apply search filter and sorting
+  const searchBar = document.getElementById('search-bar');
+  if (searchBar) {
+    applySearchFilter(searchBar.value);
+  }
+
+  applySorting();
+  updateSystemStatus();
+}
+
+// ============================================
+// BACK TO TOP
+// ============================================
+
+function initBackToTop() {
+  const btn = document.getElementById('back-to-top');
+  if (!btn) return;
+
+  window.addEventListener('scroll', () => {
+    btn.classList.toggle('visible', window.scrollY > 400);
+  });
+
+  btn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+}
+
+// ============================================
+// INITIALIZATION
+// ============================================
+
+document.addEventListener('DOMContentLoaded', async () => {
+  // Load password list
+  loadPasswordList().catch(() => {});
+
+  // Initialize UI components
+  renderFeedForm();
+  initSearchFilter();
+  initSortControl();
+  initBackToTop();
+
+  // Load news
+  await loadNews();
+});

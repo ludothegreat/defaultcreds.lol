@@ -12,7 +12,6 @@ async function fetchCreds() {
     return defaultCreds;
   } catch (error) {
     console.error(error);
-    // Fallback to a default credential if fetch fails
     return [{ user: "admin", pass: "password" }];
   }
 }
@@ -23,26 +22,28 @@ function randomCred() {
 
 function renderCredsHistory() {
   const historyDiv = document.getElementById('creds-history');
+  if (!historyDiv) return;
+
   historyDiv.innerHTML = '';
   defaultCreds.forEach(cred => {
     const item = document.createElement('div');
     item.className = 'history-item';
     item.tabIndex = 0;
-    item.innerHTML = `<span class="protocol">https://</span>` +
-      `<span class="creds">${cred.user}:<span class="password">${cred.pass}</span>@</span>` +
-      `<span class="host">defaultcreds.lol</span>`;
+    item.innerHTML = `<span class="url-protocol">https://</span>` +
+      `<span class="url-creds">${cred.user}:<span class="url-password">${cred.pass}</span>@</span>` +
+      `<span class="url-host">defaultcreds.lol</span>`;
     historyDiv.appendChild(item);
   });
 }
 
 function setFauxUrlCred(cred) {
-  const credsSpan = document.querySelector('.faux-url .creds');
+  const credsSpan = document.querySelector('.faux-url .url-creds');
   if (credsSpan) {
-    credsSpan.innerHTML = `${cred.user}:<span class="password">${cred.pass}</span>@`;
+    credsSpan.innerHTML = `${cred.user}:<span class="url-password">${cred.pass}</span>@`;
   }
   const fauxUrl = document.getElementById('faux-url');
   if (fauxUrl) {
-    const desc = `Site logo: example of default credentials in a URL bar, ${cred.user}:${cred.pass}@defaultcreds.lol`;
+    const desc = `Site logo: ${cred.user}:${cred.pass}@defaultcreds.lol`;
     fauxUrl.setAttribute('aria-label', desc);
     fauxUrl.setAttribute('title', desc);
   }
@@ -58,6 +59,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Dropdown interaction
   const fauxUrl = document.getElementById('faux-url');
   const credsHistory = document.getElementById('creds-history');
+
   if (fauxUrl && credsHistory) {
     fauxUrl.style.cursor = 'pointer';
     let open = false;
@@ -70,19 +72,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     function openDropdown() {
       credsHistory.hidden = false;
       renderCredsHistory();
-      // Sync dropdown width and position with faux-url
-      const fauxUrl = document.getElementById('faux-url');
-      if (fauxUrl && credsHistory) {
-        const rect = fauxUrl.getBoundingClientRect();
-        const parentRect = credsHistory.offsetParent
-          ? credsHistory.offsetParent.getBoundingClientRect()
-          : { left: 0 };
-        const matchMobile = window.matchMedia('(max-width: 600px)').matches;
-        const widthAdjustment = matchMobile ? 0 : -2;
-        credsHistory.style.width = `${rect.width + widthAdjustment}px`;
-        const offsetAdjustment = matchMobile ? 0 : 4;
-        const relativeLeft = rect.left - parentRect.left + offsetAdjustment;
-        credsHistory.style.left = `${relativeLeft}px`;
+
+      // Sync dropdown position with faux-url
+      const rect = fauxUrl.getBoundingClientRect();
+      const header = fauxUrl.closest('.site-header');
+      if (header) {
+        const headerRect = header.getBoundingClientRect();
+        credsHistory.style.width = `${rect.width}px`;
+        credsHistory.style.left = `${rect.left}px`;
+        credsHistory.style.transform = 'none';
       }
       open = true;
     }
@@ -100,7 +98,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     credsHistory.addEventListener('click', (e) => {
       const item = e.target.closest('.history-item');
       if (item) {
-        // Find which credential this is by index
         const idx = Array.from(credsHistory.children).indexOf(item);
         if (idx >= 0) {
           setFauxUrlCred(defaultCreds[idx]);
@@ -111,11 +108,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Hide on click outside
     document.addEventListener('click', (e) => {
-      if (
-        open &&
-        !fauxUrl.contains(e.target) &&
-        !credsHistory.contains(e.target)
-      ) {
+      if (open && !fauxUrl.contains(e.target) && !credsHistory.contains(e.target)) {
         closeDropdown();
       }
     });
