@@ -51,3 +51,4 @@ backup*
 live_backup_09212025/
 test_backup/
 
+scripts/.git/
