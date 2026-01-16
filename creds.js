@@ -146,28 +146,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function openDropdown() {
-    console.log('openDropdown called');
     renderCredsHistory();
     credsHistory.removeAttribute('hidden');
     credsHistory.style.display = 'block';
     credsHistory.style.visibility = 'visible';
     fauxUrl.setAttribute('aria-expanded', 'true');
     open = true;
-    console.log('Dropdown state - hidden attr:', credsHistory.hasAttribute('hidden'), 'display:', credsHistory.style.display, 'computed:', window.getComputedStyle(credsHistory).display);
   }
 
-  // Click handler - test if it fires
+  // Click handler
   fauxUrl.addEventListener('click', function(e) {
     e.preventDefault();
     e.stopPropagation();
-    console.log('Address bar clicked, current state open:', open);
     if (open) {
-      console.log('Closing dropdown');
       closeDropdown();
     } else {
-      console.log('Opening dropdown');
       openDropdown();
-      console.log('After openDropdown - hidden:', credsHistory.hidden, 'display:', credsHistory.style.display, 'computed display:', window.getComputedStyle(credsHistory).display);
     }
   }, false);
 
