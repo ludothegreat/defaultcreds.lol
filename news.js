@@ -276,21 +276,69 @@ function renderFeedForm() {
     feedActions.dataset.bound = 'true';
   }
 
-  // Category chips
-  const chipContainer = panelContent.querySelector('.feed-category-chips');
-  if (chipContainer && !chipContainer.dataset.bound) {
-    renderCategoryChips(chipContainer);
-    chipContainer.addEventListener('click', event => {
-      const chip = event.target.closest('.feed-category-chip');
-      if (chip && chip.dataset.category) {
-        toggleCategory(chip.dataset.category);
-        renderCategoryChips(chipContainer);
-        renderFeedOptions(feedOptionsContainer);
-        updateFeedStatusCount();
-        loadNews();
+  // Category filter popup
+  const filterBtn = document.getElementById('feed-filter-btn');
+  const filterPopup = document.getElementById('feed-filter-popup');
+  const filterPopupContent = filterPopup?.querySelector('.feed-filter-popup-content');
+  
+  if (filterBtn && filterPopup && filterPopupContent && !filterBtn.dataset.bound) {
+    // Render category checkboxes in popup
+    function renderFilterPopup() {
+      if (!filterPopupContent) return;
+      filterPopupContent.innerHTML = '';
+      
+      const categories = getAllCategories();
+      categories.forEach(category => {
+        const label = document.createElement('label');
+        label.className = 'feed-filter-checkbox-label';
+        
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.value = category;
+        checkbox.checked = activeFeedCategories.includes(category);
+        checkbox.className = 'feed-filter-checkbox';
+        
+        const span = document.createElement('span');
+        span.textContent = category;
+        
+        label.appendChild(checkbox);
+        label.appendChild(span);
+        filterPopupContent.appendChild(label);
+        
+        checkbox.addEventListener('change', () => {
+          toggleCategory(category);
+          renderFilterPopup(); // Re-render to update all checkboxes
+          renderFeedOptions(feedOptionsContainer);
+          updateFeedStatusCount();
+          loadNews();
+        });
+      });
+    }
+    
+    // Toggle popup
+    filterBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isExpanded = filterBtn.getAttribute('aria-expanded') === 'true';
+      
+      if (isExpanded) {
+        filterBtn.setAttribute('aria-expanded', 'false');
+        filterPopup.setAttribute('hidden', '');
+      } else {
+        filterBtn.setAttribute('aria-expanded', 'true');
+        filterPopup.removeAttribute('hidden');
+        renderFilterPopup();
       }
     });
-    chipContainer.dataset.bound = 'true';
+    
+    // Close popup when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!filterPopup.contains(e.target) && e.target !== filterBtn) {
+        filterBtn.setAttribute('aria-expanded', 'false');
+        filterPopup.setAttribute('hidden', '');
+      }
+    });
+    
+    filterBtn.dataset.bound = 'true';
   }
 
   // Feed search
@@ -353,8 +401,7 @@ function renderFeedOptions(container) {
     option.dataset.active = active ? 'true' : 'false';
     option.dataset.selected = isSelected ? 'true' : 'false';
 
-    const borderColor = (active && isSelected) ? feedColors.primary : (active ? 'var(--color-border)' : 'transparent');
-    option.style.borderLeftColor = borderColor;
+    // No border color needed - using background indicators instead
 
     const label = document.createElement('label');
     label.className = 'feed-option-label';
@@ -368,6 +415,7 @@ function renderFeedOptions(container) {
     checkbox.disabled = !active;
 
     const nameSpan = document.createElement('span');
+    nameSpan.className = 'feed-name';
     if (normalizedFilter) {
       const highlightRegex = new RegExp(`(${escapeRegExp(feedFilterTerm.trim())})`, 'gi');
       nameSpan.innerHTML = feed.name.replace(highlightRegex, '<mark class="search-highlight">$1</mark>');
@@ -375,11 +423,7 @@ function renderFeedOptions(container) {
       nameSpan.textContent = feed.name;
     }
 
-    const categoryBadge = document.createElement('span');
-    categoryBadge.className = 'feed-category-pill';
-    categoryBadge.textContent = feed.category || 'Feeds';
-
-    label.append(checkbox, nameSpan, categoryBadge);
+    label.append(checkbox, nameSpan);
     option.appendChild(label);
 
     const actions = document.createElement('div');
@@ -435,6 +479,7 @@ function handleFeedCheckboxChange(event) {
   }
 
   localStorage.setItem('selectedFeeds', JSON.stringify(selectedFeeds));
+  renderFeedOptions(feedOptionsContainer); // Update visual state immediately
   updateFeedStatusCount();
   loadNews();
 }
