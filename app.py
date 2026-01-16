@@ -19,13 +19,21 @@ def index():
 @app.route('/<path:path>')
 def serve_static(path):
     """Serve static files (JS, CSS, JSON, etc.)"""
-    # Security: prevent directory traversal
-    if '..' in path or path.startswith('/'):
+    # Security: prevent directory traversal using proper path normalization
+    # Normalize the path to resolve any .. or . components
+    normalized_path = os.path.normpath(path)
+    # Ensure the normalized path doesn't contain parent directory references
+    if normalized_path.startswith('..') or os.path.isabs(normalized_path):
+        return "Forbidden", 403
+    # Resolve to absolute path and ensure it's within the current directory
+    abs_path = os.path.abspath(normalized_path)
+    root_dir = os.path.abspath('.')
+    if not abs_path.startswith(root_dir):
         return "Forbidden", 403
     
     # Check if file exists
-    if os.path.isfile(path):
-        return send_from_directory('.', path)
+    if os.path.isfile(normalized_path):
+        return send_from_directory('.', normalized_path)
     else:
         return "Not Found", 404
 
