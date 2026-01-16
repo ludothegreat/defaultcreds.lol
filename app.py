@@ -42,4 +42,6 @@ if __name__ == '__main__':
     print("Server running at http://localhost:8000")
     print("Press Ctrl+C to stop")
     # Run on localhost by default, port 8000
-    app.run(host='127.0.0.1', port=8000, debug=True)
+    # Debug mode controlled by environment variable (default: False for production safety)
+    debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() in ('true', '1', 'yes')
+    app.run(host='127.0.0.1', port=8000, debug=debug_mode)
