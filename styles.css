@@ -14,13 +14,13 @@
   --color-text-muted: #6b6b6b;
   --color-border: #2e2e2e;
   --color-border-strong: #404040;
-  --color-accent: #818cf8;
-  --color-accent-soft: rgba(129, 140, 248, 0.15);
-  --color-accent-hover: #a5b4fc;
+  --color-accent: #22c55e;
+  --color-accent-soft: rgba(34, 197, 94, 0.15);
+  --color-accent-hover: #4ade80;
   --color-success: #34d399;
   --color-warning: #fbbf24;
   --color-error: #f87171;
-  --color-highlight: rgba(129, 140, 248, 0.2);
+  --color-highlight: rgba(34, 197, 94, 0.2);
 
   /* Typography */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -513,9 +513,18 @@ input, select {
   gap: var(--space-2);
 }
 
+.feed-controls-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  position: relative;
+  z-index: 1;
+}
+
 .feed-actions {
   display: flex;
-  gap: var(--space-2);
+  gap: var(--space-1);
+  flex-shrink: 0;
 }
 
 .btn-sm {
@@ -546,47 +555,134 @@ input, select {
   outline-offset: 1px;
 }
 
-/* Category Chips */
-.feed-category-chips {
+.feed-action-btn {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1);
-}
-
-.feed-category-chip {
-  padding: 2px var(--space-2);
-  font-size: 11px;
-  font-weight: 500;
-  font-family: var(--font-mono);
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
   border: 1px solid var(--color-border);
   border-radius: 0;
+  background: var(--color-bg);
   color: var(--color-text-secondary);
-  background: transparent;
+  cursor: pointer;
   transition: all var(--transition-fast);
+  flex-shrink: 0;
 }
 
-.feed-category-chip:hover {
-  border-color: var(--color-text-muted);
-}
-
-.feed-category-chip[data-state="active"] {
+.feed-action-btn:hover {
   border-color: var(--color-accent);
-  background: var(--color-accent-soft);
   color: var(--color-accent);
+  background: var(--color-accent-soft);
 }
 
-.feed-category-chip[data-state="inactive"] {
-  opacity: 0.5;
-}
-
-.feed-category-chip:focus-visible {
+.feed-action-btn:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 1px;
 }
 
+.feed-action-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Category Filter Button */
+.feed-filter-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 0;
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.feed-filter-btn:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.feed-filter-btn[aria-expanded="true"] {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.feed-filter-btn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.feed-filter-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Filter Popup */
+.feed-filter-popup {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  right: 0;
+  width: 200px;
+  z-index: 200;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 0;
+  box-shadow: var(--shadow-md);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.feed-filter-popup-content {
+  padding: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.feed-filter-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  font-family: var(--font-mono);
+  color: var(--color-text);
+  transition: background var(--transition-fast);
+  border-radius: 0;
+}
+
+.feed-filter-checkbox-label:hover {
+  background: var(--color-bg-hover);
+}
+
+.feed-filter-checkbox {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.feed-filter-checkbox-label span {
+  flex: 1;
+}
+
+
 /* Feed Search */
 .feed-search-wrapper {
   position: relative;
+  flex: 1;
+  min-width: 0;
 }
 
 .feed-search-wrapper .search-icon {
@@ -602,7 +698,7 @@ input, select {
 
 .feed-search {
   width: 100%;
-  padding: var(--space-1) var(--space-2) var(--space-1) var(--space-8);
+  padding: var(--space-1) var(--space-2) var(--space-1) var(--space-7);
   font-size: var(--text-sm);
   font-family: var(--font-mono);
   border: 1px solid var(--color-border);
@@ -610,6 +706,17 @@ input, select {
   background: var(--color-bg);
   color: var(--color-text);
   transition: all var(--transition-fast);
+  line-height: 1.4;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.feed-search::-webkit-search-decoration,
+.feed-search::-webkit-search-cancel-button,
+.feed-search::-webkit-search-results-button,
+.feed-search::-webkit-search-results-decoration {
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .feed-search:focus {
@@ -638,10 +745,18 @@ input, select {
   padding: var(--space-1) var(--space-2);
   border: none;
   border-bottom: 1px solid var(--color-border);
-  border-left: 2px solid transparent;
   border-radius: 0;
   background: var(--color-bg);
   transition: all var(--transition-fast);
+  position: relative;
+}
+
+.feed-option[data-selected="true"][data-active="true"] {
+  background: var(--color-accent-soft);
+}
+
+.feed-option[data-selected="true"][data-active="true"]:hover {
+  background: var(--color-highlight);
 }
 
 .feed-option:last-child {
@@ -666,8 +781,17 @@ input, select {
   align-items: center;
   gap: var(--space-2);
   flex: 1;
+  min-width: 0;
   cursor: pointer;
   font-size: var(--text-sm);
+}
+
+.feed-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .feed-option-label input[type="checkbox"] {
@@ -676,20 +800,15 @@ input, select {
   accent-color: var(--color-accent);
 }
 
-.feed-category-pill {
-  font-size: 10px;
-  font-family: var(--font-mono);
-  padding: 1px var(--space-1);
-  border-radius: 0;
-  border: 1px solid var(--color-border);
-  background: transparent;
-  color: var(--color-text-muted);
-  margin-left: auto;
-}
-
 .feed-option-actions {
   display: flex;
   gap: 2px;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.feed-option:hover .feed-option-actions {
+  opacity: 1;
 }
 
 .feed-move {
@@ -704,6 +823,7 @@ input, select {
   color: var(--color-text-muted);
   background: var(--color-bg);
   transition: all var(--transition-fast);
+  flex-shrink: 0;
 }
 
 .feed-move:hover:not(:disabled) {
@@ -1127,8 +1247,8 @@ mark.search-highlight {
     0deg,
     transparent,
     transparent 2px,
-    rgba(129, 140, 248, 0.03) 2px,
-    rgba(129, 140, 248, 0.03) 4px
+    rgba(34, 197, 94, 0.03) 2px,
+    rgba(34, 197, 94, 0.03) 4px
   );
   pointer-events: none;
   animation: skeleton-scanlines 0.15s infinite;
@@ -1261,7 +1381,7 @@ mark.search-highlight {
   pointer-events: none;
   background: linear-gradient(90deg, 
     transparent 0%,
-    rgba(129, 140, 248, 0.15) 20%,
+    rgba(34, 197, 94, 0.15) 20%,
     rgba(251, 191, 36, 0.1) 40%,
     rgba(244, 113, 113, 0.12) 60%,
     rgba(52, 211, 153, 0.1) 80%,
@@ -1359,7 +1479,7 @@ mark.search-highlight {
   overflow: hidden;
   animation: skeleton-progress-scan 1.5s infinite, skeleton-progress-glitch 2.5s infinite, skeleton-progress-jitter 0.2s infinite;
   box-shadow: 0 0 4px var(--color-accent), 0 0 8px var(--color-accent-soft);
-  border-top: 1px solid rgba(129, 140, 248, 0.3);
+  border-top: 1px solid rgba(34, 197, 94, 0.3);
   transition: width 0.3s ease-out;
 }
 
