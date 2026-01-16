@@ -57,14 +57,26 @@ function reserveHue(preferred) {
   return hue;
 }
 
+// Common helper function to generate HSL color string
+function generateHslColor(hue, saturation, lightness) {
+  const roundedHue = Math.round(hue * 100) / 100;
+  return `hsl(${roundedHue}, ${saturation}%, ${lightness}%)`;
+}
+
+// Common helper function to calculate hue from a string hash
+function calculateHueFromString(str, multiplier = 1) {
+  const hash = hashStringToInt(str);
+  return ((hash * multiplier) % 360 + 360) % 360;
+}
+
 function getFeedColors(url) {
   if (feedColorCache.has(url)) return feedColorCache.get(url);
   const baseHue = reserveHue(hashStringToInt(url));
-  const hue = Math.round(baseHue * 100) / 100;
-  const primary = `hsl(${hue}, 68%, 52%)`;
-  const soft = `hsl(${hue}, 85%, 88%)`;
-  const badgeText = `hsl(${hue}, 55%, 28%)`;
-  const colors = { primary, soft, badgeText };
+  const colors = {
+    primary: generateHslColor(baseHue, 68, 52),
+    soft: generateHslColor(baseHue, 85, 88),
+    badgeText: generateHslColor(baseHue, 55, 28)
+  };
   feedColorCache.set(url, colors);
   return colors;
 }
@@ -72,11 +84,12 @@ function getFeedColors(url) {
 function getCategoryColors(name) {
   const key = name || 'Feeds';
   if (categoryColorCache.has(key)) return categoryColorCache.get(key);
-  const hue = Math.round(((hashStringToInt(key) * 7) % 360 + 360) % 360);
-  const border = `hsl(${hue}, 32%, 46%)`;
-  const fill = `hsl(${hue}, 28%, 92%)`;
-  const text = `hsl(${hue}, 40%, 28%)`;
-  const colors = { border, fill, text };
+  const hue = calculateHueFromString(key, 7);
+  const colors = {
+    border: generateHslColor(hue, 32, 46),
+    fill: generateHslColor(hue, 28, 92),
+    text: generateHslColor(hue, 40, 28)
+  };
   categoryColorCache.set(key, colors);
   return colors;
 }
