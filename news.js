@@ -257,10 +257,21 @@ function loadMessageData(messageType) {
   return dataLoadPromises[messageType];
 }
 
-// Preload all data files
+// Preload all data files with error boundaries
 function preloadAllMessageData() {
   const messages = Object.keys(MESSAGE_DATA_FILES);
-  return Promise.all(messages.map(msg => loadMessageData(msg).catch(() => {})));
+  return Promise.allSettled(messages.map(msg => 
+    loadMessageData(msg).catch(err => {
+      console.warn(`Failed to preload message data for ${msg}:`, err);
+      return null; // Return null instead of throwing
+    })
+  )).then(results => {
+    const failures = results.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && r.value === null));
+    if (failures.length > 0) {
+      console.warn(`${failures.length} message data file(s) failed to preload`);
+    }
+    return results;
+  });
 }
 
 // ============================================
@@ -1003,100 +1014,126 @@ function renderItems(section, feedName, items) {
 // ============================================
 
 async function handleFeed(feed) {
-  const container = document.getElementById('news-feed');
-  const sectionId = 'sec-' + feedKey(feed);
+  try {
+    const container = document.getElementById('news-feed');
+    if (!container) {
+      throw new Error('News feed container not found');
+    }
+    
+    const sectionId = 'sec-' + feedKey(feed);
 
-  let section = document.getElementById(sectionId);
-  if (!section) {
-    section = document.createElement('section');
-    section.id = sectionId;
-    section.classList.add('feed-section');
+    let section = document.getElementById(sectionId);
+    if (!section) {
+      try {
+        section = document.createElement('section');
+        section.id = sectionId;
+        section.classList.add('feed-section');
+
+        const colors = getFeedColors(feed.url);
+        section.style.borderLeftColor = colors.primary;
+
+        const h2 = document.createElement('h2');
+        h2.textContent = feed.name;
+        h2.addEventListener('click', () => {
+          section.classList.toggle('collapsed');
+        });
+        section.appendChild(h2);
+
+        // Add skeleton placeholders
+        const skeletons = createSkeletonArticles(3);
+        section.appendChild(skeletons);
+        
+        // Apply glitch effects to skeleton text
+        applyGlitchEffects(section);
+
+        container.appendChild(section);
+      } catch (err) {
+        console.error(`Failed to create section for ${feed.name}:`, err);
+        throw err;
+      }
+    }
 
     const colors = getFeedColors(feed.url);
     section.style.borderLeftColor = colors.primary;
+    section.classList.remove('feed-error');
 
-    const h2 = document.createElement('h2');
-    h2.textContent = feed.name;
-    h2.addEventListener('click', () => {
-      section.classList.toggle('collapsed');
-    });
-    section.appendChild(h2);
+    const cacheKey = 'xmlCache_' + feedKey(feed);
+    const raw = localStorage.getItem(cacheKey);
 
-    // Add skeleton placeholders
-    const skeletons = createSkeletonArticles(3);
-    section.appendChild(skeletons);
-    
-    // Apply glitch effects to skeleton text
-    applyGlitchEffects(section);
+    // Render from cache immediately
+    if (raw) {
+      try {
+        const { xml } = JSON.parse(raw);
+        const data = await parseXml(xml);
+        section.querySelectorAll('.status, .skeleton-article').forEach(el => el.remove());
+        renderItems(section, feed.name, data.items);
+      } catch (e) {
+        console.warn(`Cache parse error for ${feed.name}:`, e);
+        // Continue to fetch fresh data even if cache fails
+      }
+    }
 
-    container.appendChild(section);
-  }
-
-  const colors = getFeedColors(feed.url);
-  section.style.borderLeftColor = colors.primary;
-  section.classList.remove('feed-error');
-
-  const cacheKey = 'xmlCache_' + feedKey(feed);
-  const raw = localStorage.getItem(cacheKey);
-
-  // Render from cache immediately
-  if (raw) {
+    // Fetch fresh in background
     try {
-      const { xml } = JSON.parse(raw);
-      const data = await parseXml(xml);
-      section.querySelectorAll('.status, .skeleton-article').forEach(el => el.remove());
-      renderItems(section, feed.name, data.items);
-    } catch (e) {
-      console.warn('Cache parse error', e);
-    }
-  }
+      const freshXml = await fetchXml(feed);
+      const prevXml = raw ? JSON.parse(raw).xml : null;
 
-  // Fetch fresh in background
-  try {
-    const freshXml = await fetchXml(feed);
-    const prevXml = raw ? JSON.parse(raw).xml : null;
-
-    if (freshXml !== prevXml) {
-      localStorage.setItem(cacheKey, JSON.stringify({ timestamp: Date.now(), xml: freshXml }));
-      const freshData = await parseXml(freshXml);
-      section.querySelectorAll('.status, article, .skeleton-article').forEach(n => n.remove());
-      renderItems(section, feed.name, freshData.items);
-    }
-
-    lastUpdateTime = new Date();
-    updateSystemStatus();
-  } catch (err) {
-    section.querySelectorAll('.retry-button, .skeleton-article').forEach(el => el.remove());
-
-    console.error(`Failed to update ${feed.name}`, err);
-
-    // Only show error if we don't have cached content
-    if (!section.querySelector('article')) {
-      const status = document.createElement('p');
-      status.className = 'status error';
-
-      if (err.isProxyError) {
-        status.textContent = `Couldn't load ${feed.name}: News CORS proxy unavailable.`;
-      } else if (err.isParserError) {
-        status.textContent = `Couldn't load ${feed.name}: RSS parser failed.`;
-      } else {
-        status.textContent = `Couldn't load ${feed.name}.`;
+      if (freshXml !== prevXml) {
+        try {
+          localStorage.setItem(cacheKey, JSON.stringify({ timestamp: Date.now(), xml: freshXml }));
+          const freshData = await parseXml(freshXml);
+          section.querySelectorAll('.status, article, .skeleton-article').forEach(n => n.remove());
+          renderItems(section, feed.name, freshData.items);
+        } catch (parseErr) {
+          console.error(`Failed to parse fresh data for ${feed.name}:`, parseErr);
+          throw parseErr;
+        }
       }
 
-      section.appendChild(status);
-      section.classList.add('feed-error');
+      lastUpdateTime = new Date();
+      updateSystemStatus();
+    } catch (err) {
+      section.querySelectorAll('.retry-button, .skeleton-article').forEach(el => el.remove());
+
+      console.error(`Failed to update ${feed.name}:`, err);
+
+      // Only show error if we don't have cached content
+      if (!section.querySelector('article')) {
+        const status = document.createElement('p');
+        status.className = 'status error';
+
+        if (err.isProxyError) {
+          status.textContent = `Couldn't load ${feed.name}: News CORS proxy unavailable.`;
+        } else if (err.isParserError) {
+          status.textContent = `Couldn't load ${feed.name}: RSS parser failed.`;
+        } else {
+          status.textContent = `Couldn't load ${feed.name}.`;
+        }
+
+        section.appendChild(status);
+        section.classList.add('feed-error');
+      }
+
+      const retryButton = document.createElement('button');
+      retryButton.textContent = 'Retry';
+      retryButton.classList.add('retry-button');
+      retryButton.addEventListener('click', () => handleFeed(feed).catch(err => {
+        console.error(`Retry failed for ${feed.name}:`, err);
+      }));
+      section.appendChild(retryButton);
+
+      updateSystemStatus();
+      
+      // Re-throw to allow loadNews to track failures
+      throw err;
     }
 
-    const retryButton = document.createElement('button');
-    retryButton.textContent = 'Retry';
-    retryButton.classList.add('retry-button');
-    retryButton.addEventListener('click', () => handleFeed(feed));
-    section.appendChild(retryButton);
-
-    updateSystemStatus();
+    return section;
+  } catch (err) {
+    // Top-level error boundary for handleFeed
+    console.error(`Critical error in handleFeed for ${feed.name}:`, err);
+    throw err;
   }
-
-  return section;
 }
 
 // ============================================
@@ -1332,9 +1369,26 @@ async function loadNews() {
     return;
   }
 
-  // Fetch feeds incrementally
-  const results = await Promise.all(selected.map(f => handleFeed(f)));
-  clearInterval(animationInterval);
+  // Fetch feeds incrementally with error boundaries
+  try {
+    const results = await Promise.allSettled(selected.map(f => handleFeed(f).catch(err => {
+      console.error(`Failed to load feed ${f.name}:`, err);
+      return { error: err, feed: f };
+    })));
+    
+    // Log any failures for debugging
+    const failures = results.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && r.value && r.value.error));
+    if (failures.length > 0) {
+      console.warn(`${failures.length} feed(s) failed to load`);
+    }
+  } catch (err) {
+    console.error('Critical error in loadNews:', err);
+    if (emptyState) {
+      emptyState.hidden = false;
+    }
+  } finally {
+    clearInterval(animationInterval);
+  }
 
   // Apply search filter and sorting
   const searchBar = document.getElementById('search-bar');
