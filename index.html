@@ -98,16 +98,35 @@
           </div>
           <div class="panel-content" id="feed-panel-content">
             <div class="feed-controls">
-              <div class="feed-actions">
-                <button type="button" class="btn-sm" data-action="select-all">Select all</button>
-                <button type="button" class="btn-sm" data-action="select-none">Clear</button>
-              </div>
-              <div class="feed-category-chips" role="group" aria-label="Filter by category"></div>
-              <div class="feed-search-wrapper">
-                <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-                </svg>
-                <input type="search" class="feed-search" placeholder="Search feeds..." aria-label="Search feeds">
+              <div class="feed-controls-bar">
+                <div class="feed-search-wrapper">
+                  <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                  </svg>
+                  <input type="search" class="feed-search" placeholder="Search..." aria-label="Search feeds">
+                </div>
+                <div class="feed-actions">
+                  <button type="button" class="feed-action-btn" data-action="select-all" aria-label="Select all" title="Select all">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="9 11 12 14 22 4"/>
+                      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                    </svg>
+                  </button>
+                  <button type="button" class="feed-action-btn" data-action="select-none" aria-label="Clear selection" title="Clear selection">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18"/>
+                      <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  </button>
+                  <button type="button" class="feed-filter-btn" id="feed-filter-btn" aria-label="Filter by category" aria-expanded="false" title="Filter by category">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                    </svg>
+                  </button>
+                </div>
+                <div class="feed-filter-popup" id="feed-filter-popup" hidden>
+                  <div class="feed-filter-popup-content"></div>
+                </div>
               </div>
             </div>
             <div class="feed-list" id="feed-list"></div>
@@ -202,7 +221,7 @@
 
   <script src="creds.js"></script>
   <script src="https://unpkg.com/rss-parser/dist/rss-parser.min.js"></script>
-  <script src="news.js"></script>
+  <script type="module" src="js/news.js"></script>
   <script src="widget.js"></script>
   <script src="ui.js"></script>
 </body>
