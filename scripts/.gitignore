@@ -1,0 +1,29 @@
+# Ignore this nested repo documentation
+NESTED_REPO.md
+
+# Ignore any generated data files (these belong in parent repo)
+*.txt
+
+# Ignore Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Ignore virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
