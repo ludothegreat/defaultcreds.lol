@@ -144,6 +144,11 @@ let activeFeedCategories = (() => {
   return Array.from(new Set(feeds.map(feed => feed.category || 'Feeds')));
 })();
 
+// Save defaults to localStorage to ensure state consistency
+if (!storedActiveCategories) {
+  localStorage.setItem('activeFeedCategories', JSON.stringify(activeFeedCategories));
+}
+
 if (!storedSelectedFeedsValue) {
   DEFAULT_FEED_ORDER.forEach(url => {
     if (!selectedFeeds.includes(url)) selectedFeeds.push(url);
