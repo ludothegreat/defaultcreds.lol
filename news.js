@@ -1309,21 +1309,34 @@ function initSidebar() {
   });
 
   // Hover behavior - show sidebar on hover of trigger or sidebar itself
+  // Delays: time to hover before opening, time to stay open after leaving
+  const SHOW_DELAY = 300; // ms - how long to hover before sidebar opens
+  const HIDE_DELAY = 750; // ms - how long sidebar stays open after mouse leaves
+  
+  let showTimeout;
   let hideTimeout;
   
   function showSidebar() {
     if (!sidebar.classList.contains('pinned')) {
-      clearTimeout(hideTimeout);
-      sidebar.style.transform = 'translateX(0)';
+      clearTimeout(hideTimeout); // Cancel any pending hide
+      clearTimeout(showTimeout); // Cancel any pending show (in case of rapid hover/unhover)
+      
+      // Delay before showing
+      showTimeout = setTimeout(() => {
+        sidebar.style.transform = 'translateX(0)';
+      }, SHOW_DELAY);
     }
   }
 
   function hideSidebar() {
     if (!sidebar.classList.contains('pinned')) {
-      clearTimeout(hideTimeout);
+      clearTimeout(showTimeout); // Cancel any pending show
+      clearTimeout(hideTimeout); // Cancel any pending hide
+      
+      // Delay before hiding
       hideTimeout = setTimeout(() => {
         sidebar.style.transform = 'translateX(-100%)';
-      }, 300); // Delay to allow smooth transition from trigger to sidebar
+      }, HIDE_DELAY);
     }
   }
 
@@ -1343,6 +1356,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Initialize sidebar
   initSidebar();
+
+  // Initialize refresh button
+  const refreshBtn = document.getElementById('refresh-page');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.reload();
+    });
+  } else {
+    console.warn('Refresh button not found');
+  }
 
   // Initialize UI components
   renderFeedForm();
