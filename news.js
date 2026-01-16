@@ -702,6 +702,30 @@ function applyGlitchEffects(section) {
     const baseRandom = () => Math.random();
     const indexOffset = index * 0.3; // Offset based on index
     
+    // Animation timing constants (extracted from magic numbers)
+    const ANIMATION_DELAYS = {
+      COMMAND_MAX_DELAY: 600,           // Max initial delay for command glitch (ms)
+      COMMAND_GLITCH_MIN: 30,           // Min timeout for command glitch reset (ms)
+      COMMAND_GLITCH_MAX: 170,          // Max timeout for command glitch reset (ms)
+      PROGRESS_TEXT_DELAY_MAX: 800,     // Max delay for progress text animation (ms)
+      PROGRESS_TEXT_RESET_MIN: 40,      // Min timeout for progress text reset (ms)
+      PROGRESS_TEXT_RESET_MAX: 140      // Max timeout for progress text reset (ms)
+    };
+    
+    const ANIMATION_PROBABILITIES = {
+      COMMAND_BASE: 0.25,               // Base probability for command glitch
+      COMMAND_INDEX_MULTIPLIER: 0.1,    // Probability increase per index
+      PROGRESS_BASE: 0.2,               // Base probability for progress text glitch
+      PROGRESS_INDEX_MULTIPLIER: 0.08   // Probability increase per index
+    };
+    
+    const GLITCH_INTENSITY = {
+      COMMAND_MIN: 0.1,                 // Min glitch intensity for commands
+      COMMAND_MAX: 0.2,                 // Max glitch intensity for commands
+      PROGRESS_MIN: 0.15,               // Min glitch intensity for progress text
+      PROGRESS_MAX: 0.2                 // Max glitch intensity for progress text
+    };
+    
     // Animate password for this skeleton with much more varied delay
     if (passwordInput) {
       const messageType = skeleton.dataset.messageType || '[>] Cracking password...';
@@ -757,16 +781,19 @@ function applyGlitchEffects(section) {
     if (commandEl) {
       const original = commandEl.dataset.original || commandEl.textContent;
       const commandInterval = 250 + baseRandom() * 1500; // 250-1750ms
-      const commandDelay = baseRandom() * 600;
+      const commandDelay = baseRandom() * ANIMATION_DELAYS.COMMAND_MAX_DELAY;
       setTimeout(() => {
         setInterval(() => {
-          if (baseRandom() < 0.25 + indexOffset * 0.1) { // 25-55% chance
-            commandEl.textContent = glitchText(original, 0.1 + baseRandom() * 0.2);
+          const glitchProbability = ANIMATION_PROBABILITIES.COMMAND_BASE + indexOffset * ANIMATION_PROBABILITIES.COMMAND_INDEX_MULTIPLIER;
+          if (baseRandom() < glitchProbability) {
+            const glitchIntensity = GLITCH_INTENSITY.COMMAND_MIN + baseRandom() * (GLITCH_INTENSITY.COMMAND_MAX - GLITCH_INTENSITY.COMMAND_MIN);
+            commandEl.textContent = glitchText(original, glitchIntensity);
             commandEl.style.color = ['var(--color-error)', 'var(--color-warning)', 'var(--color-accent)', 'var(--color-success)'][Math.floor(baseRandom() * 4)];
+            const resetDelay = ANIMATION_DELAYS.COMMAND_GLITCH_MIN + baseRandom() * (ANIMATION_DELAYS.COMMAND_GLITCH_MAX - ANIMATION_DELAYS.COMMAND_GLITCH_MIN);
             setTimeout(() => {
               commandEl.textContent = original;
               commandEl.style.color = '';
-            }, 30 + baseRandom() * 170);
+            }, resetDelay);
           }
         }, commandInterval);
       }, commandDelay);
@@ -775,16 +802,19 @@ function applyGlitchEffects(section) {
     if (progressTextEl) {
       const original = progressTextEl.dataset.original || progressTextEl.textContent;
       const progressTextInterval = 400 + baseRandom() * 2000; // 400-2400ms
-      const progressTextDelay = baseRandom() * 800;
+      const progressTextDelay = baseRandom() * ANIMATION_DELAYS.PROGRESS_TEXT_DELAY_MAX;
       setTimeout(() => {
         setInterval(() => {
-          if (baseRandom() < 0.2 + indexOffset * 0.08) { // 20-44% chance
-            progressTextEl.textContent = glitchText(original, 0.15 + baseRandom() * 0.2);
+          const glitchProbability = ANIMATION_PROBABILITIES.PROGRESS_BASE + indexOffset * ANIMATION_PROBABILITIES.PROGRESS_INDEX_MULTIPLIER;
+          if (baseRandom() < glitchProbability) {
+            const glitchIntensity = GLITCH_INTENSITY.PROGRESS_MIN + baseRandom() * (GLITCH_INTENSITY.PROGRESS_MAX - GLITCH_INTENSITY.PROGRESS_MIN);
+            progressTextEl.textContent = glitchText(original, glitchIntensity);
             progressTextEl.style.transform = 'translateX(' + ((baseRandom() * 4 - 2)) + 'px)';
+            const resetDelay = ANIMATION_DELAYS.PROGRESS_TEXT_RESET_MIN + baseRandom() * (ANIMATION_DELAYS.PROGRESS_TEXT_RESET_MAX - ANIMATION_DELAYS.PROGRESS_TEXT_RESET_MIN);
             setTimeout(() => {
               progressTextEl.textContent = original;
               progressTextEl.style.transform = '';
-            }, 40 + baseRandom() * 140);
+            }, resetDelay);
           }
         }, progressTextInterval);
       }, progressTextDelay);
