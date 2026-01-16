@@ -163,38 +163,84 @@ let lastUpdateTime = null;
 
 const CORS_PROXY = "https://api.allorigins.win/raw?url=";
 const parser = new RSSParser();
-const PASSWORD_WORDLIST_URL = 'top_1000_passwords.txt';
 
-const fallbackPasswords = [
-  '123456', 'password', '123456789', 'qwerty', '12345',
-  '12345678', '111111', '1234567', 'sunshine', 'iloveyou',
-];
+// Message type to file mapping
+const MESSAGE_DATA_FILES = {
+  '[>] Cracking password...': 'cracking_passwords.txt',
+  '[>] Brute forcing credentials...': 'brute_force_creds.txt',
+  '[>] Testing password hash...': 'password_hashes.txt',
+  '[>] Decrypting credentials...': 'decrypting_creds.txt',
+  '[>] Bypassing authentication...': 'bypassing_auth.txt',
+  '[>] Exploiting default creds...': 'default_creds.txt',
+  '[>] Scanning for weak passwords...': 'weak_passwords.txt',
+  '[>] Injecting credential payload...': 'injection_payloads.txt'
+};
 
-let passwordList = [...fallbackPasswords];
-let passwordListPromise = null;
+// Fallback data for each message type
+const fallbackData = {
+  '[>] Cracking password...': ['123456', 'password', '123456789', 'qwerty', '12345'],
+  '[>] Brute forcing credentials...': ['admin:admin', 'root:root', 'user:password', 'guest:guest', 'test:test'],
+  '[>] Testing password hash...': ['$2b$10$abcdefghijklmnopqrstuv', '$5$rounds=5000$salt$hash', 'a1b2c3d4e5f6'],
+  '[>] Decrypting credentials...': ['ENC(abc123)', '{encrypted}xyz789', 'ciphertext:def456'],
+  '[>] Bypassing authentication...': ['Bearer token123', 'session_id=abc', 'api_key_xyz'],
+  '[>] Exploiting default creds...': ['admin:admin', 'root:password', 'administrator:admin'],
+  '[>] Scanning for weak passwords...': ['password', '123456', 'qwerty', 'abc123', 'password1'],
+  '[>] Injecting credential payload...': ["admin' OR '1'='1", "admin'--", "' OR 1=1--"]
+};
 
-function loadPasswordList() {
-  if (passwordListPromise) return passwordListPromise;
-  passwordListPromise = fetch(PASSWORD_WORDLIST_URL)
+// Store loaded data for each message type
+const messageDataCache = {};
+const dataLoadPromises = {};
+
+function loadMessageData(messageType) {
+  // Return cached data if available
+  if (messageDataCache[messageType]) {
+    return Promise.resolve(messageDataCache[messageType]);
+  }
+  
+  // Return existing promise if already loading
+  if (dataLoadPromises[messageType]) {
+    return dataLoadPromises[messageType];
+  }
+  
+  const fileName = MESSAGE_DATA_FILES[messageType];
+  if (!fileName) {
+    // No file mapping, use fallback
+    messageDataCache[messageType] = [...(fallbackData[messageType] || fallbackData['[>] Cracking password...'])];
+    return Promise.resolve(messageDataCache[messageType]);
+  }
+  
+  // Load the file
+  dataLoadPromises[messageType] = fetch(fileName)
     .then(res => {
-      if (!res.ok) throw new Error(`wordlist ${res.status}`);
+      if (!res.ok) throw new Error(`Failed to load ${fileName}: ${res.status}`);
       return res.text();
     })
     .then(text => {
       const entries = text
         .split(/\r?\n/)
         .map(line => line.trim())
-        .filter(Boolean)
-        .slice(0, 2000);
+        .filter(Boolean);
       if (entries.length) {
-        passwordList = entries;
+        messageDataCache[messageType] = entries;
+      } else {
+        messageDataCache[messageType] = [...(fallbackData[messageType] || fallbackData['[>] Cracking password...'])];
       }
+      return messageDataCache[messageType];
     })
     .catch(err => {
-      console.warn('Failed to load password list', err);
-      passwordList = [...fallbackPasswords];
+      console.warn(`Failed to load ${fileName}, using fallback:`, err);
+      messageDataCache[messageType] = [...(fallbackData[messageType] || fallbackData['[>] Cracking password...'])];
+      return messageDataCache[messageType];
     });
-  return passwordListPromise;
+  
+  return dataLoadPromises[messageType];
+}
+
+// Preload all data files
+function preloadAllMessageData() {
+  const messages = Object.keys(MESSAGE_DATA_FILES);
+  return Promise.all(messages.map(msg => loadMessageData(msg).catch(() => {})));
 }
 
 // ============================================
@@ -536,16 +582,275 @@ async function parseXml(xml) {
 // SKELETON PLACEHOLDERS
 // ============================================
 
+function glitchText(text, intensity = 0.1) {
+  const glitchChars = '█▓▒░▄▀▌▐║╗╝╚╔╩╦╠═╬0123456789!@#$%^&*';
+  let glitched = '';
+  for (let i = 0; i < text.length; i++) {
+    if (Math.random() < intensity) {
+      glitched += glitchChars[Math.floor(Math.random() * glitchChars.length)];
+    } else {
+      glitched += text[i];
+    }
+  }
+  return glitched;
+}
+
+function animateSkeletonPassword(passwordInput, messageType, delay = 0) {
+  if (!passwordInput) return;
+  
+  // Get the data list for this message type
+  const dataList = messageDataCache[messageType] || fallbackData[messageType] || fallbackData['[>] Cracking password...'];
+  
+  if (!dataList || dataList.length === 0) {
+    // If data not loaded yet, try to load it and retry
+    loadMessageData(messageType).then(() => {
+      animateSkeletonPassword(passwordInput, messageType, delay);
+    });
+    return;
+  }
+  
+  // Each skeleton gets completely different timing
+  let i = Math.floor(Math.random() * dataList.length);
+  const baseSpeed = 120 + Math.random() * 180; // 120-300ms per password (wider range)
+  let currentSpeed = baseSpeed;
+  
+  // Random initial delay - much more varied
+  const initialDelay = delay + Math.random() * 800;
+  
+  setTimeout(() => {
+    const updatePassword = () => {
+      if (passwordInput.parentElement && passwordInput.parentElement.closest('.skeleton-article')) {
+        passwordInput.value = dataList[i];
+        i = (i + 1) % dataList.length;
+        
+        // Occasionally vary the speed for more independence
+        if (Math.random() < 0.1) {
+          currentSpeed = baseSpeed + (Math.random() * 100 - 50); // ±50ms variation
+        }
+        
+        setTimeout(updatePassword, currentSpeed);
+      }
+    };
+    
+    updatePassword();
+  }, initialDelay);
+}
+
+function applyGlitchEffects(section) {
+  const skeletons = section.querySelectorAll('.skeleton-article');
+  skeletons.forEach((skeleton, index) => {
+    const commandEl = skeleton.querySelector('.skeleton-command');
+    const progressTextEl = skeleton.querySelector('.skeleton-progress-text');
+    const metaTextEl = skeleton.querySelector('.skeleton-meta-text');
+    const passwordInput = skeleton.querySelector('.skeleton-password-input');
+    const progressBar = skeleton.querySelector('.skeleton-progress-bar');
+    
+    // Each skeleton gets completely independent timing - use index-based randomization
+    // This ensures each skeleton has different behavior
+    const baseRandom = () => Math.random();
+    const indexOffset = index * 0.3; // Offset based on index
+    
+    // Animate password for this skeleton with much more varied delay
+    if (passwordInput) {
+      const messageType = skeleton.dataset.messageType || '[>] Cracking password...';
+      const passwordDelay = index * 400 + baseRandom() * 1200; // Much wider range: 0-3600ms
+      animateSkeletonPassword(passwordInput, messageType, passwordDelay);
+    }
+    
+    // Independent progress bar animation - each progresses at different rate
+    if (progressBar) {
+      const initialWidth = parseFloat(progressBar.style.width) || (10 + baseRandom() * 40);
+      let currentWidth = initialWidth;
+      const progressSpeed = 600 + baseRandom() * 2400; // 600-3000ms per update (very varied)
+      const progressIncrement = 0.3 + baseRandom() * 2.7; // 0.3-3% per update
+      
+      const animateProgress = () => {
+        if (skeleton.parentElement && currentWidth < 100) {
+          currentWidth += progressIncrement;
+          if (currentWidth > 100) currentWidth = 100;
+          progressBar.style.width = currentWidth + '%';
+          
+          // Update progress text
+          if (progressTextEl) {
+            progressTextEl.textContent = Math.floor(currentWidth) + '%';
+            progressTextEl.dataset.original = Math.floor(currentWidth) + '%';
+          }
+          
+          // Variable delay for next update
+          const nextDelay = progressSpeed + (baseRandom() * 600 - 300); // ±300ms variation
+          setTimeout(animateProgress, nextDelay);
+        }
+      };
+      
+      // Start at different times
+      setTimeout(animateProgress, baseRandom() * 800);
+    }
+    
+    // Add random screen flicker to entire skeleton - independent timing
+    const flickerInterval = 200 + baseRandom() * 1800; // 200-2000ms (very varied)
+    const flickerDelay = baseRandom() * 1000; // Initial delay 0-1000ms
+    setTimeout(() => {
+      setInterval(() => {
+        if (baseRandom() < 0.1 + indexOffset * 0.05) { // 10-25% chance (varies by index)
+          skeleton.style.filter = 'brightness(' + (1.2 + baseRandom() * 0.5) + ') contrast(' + (1.1 + baseRandom() * 0.4) + ')';
+          skeleton.style.transform = 'translateX(' + ((baseRandom() * 5 - 2.5)) + 'px) translateY(' + ((baseRandom() * 3 - 1.5)) + 'px)';
+          setTimeout(() => {
+            skeleton.style.filter = '';
+            skeleton.style.transform = '';
+          }, 20 + baseRandom() * 150);
+        }
+      }, flickerInterval);
+    }, flickerDelay);
+    
+    if (commandEl) {
+      const original = commandEl.dataset.original || commandEl.textContent;
+      const commandInterval = 250 + baseRandom() * 1500; // 250-1750ms
+      const commandDelay = baseRandom() * 600;
+      setTimeout(() => {
+        setInterval(() => {
+          if (baseRandom() < 0.25 + indexOffset * 0.1) { // 25-55% chance
+            commandEl.textContent = glitchText(original, 0.1 + baseRandom() * 0.2);
+            commandEl.style.color = ['var(--color-error)', 'var(--color-warning)', 'var(--color-accent)', 'var(--color-success)'][Math.floor(baseRandom() * 4)];
+            setTimeout(() => {
+              commandEl.textContent = original;
+              commandEl.style.color = '';
+            }, 30 + baseRandom() * 170);
+          }
+        }, commandInterval);
+      }, commandDelay);
+    }
+    
+    if (progressTextEl) {
+      const original = progressTextEl.dataset.original || progressTextEl.textContent;
+      const progressTextInterval = 400 + baseRandom() * 2000; // 400-2400ms
+      const progressTextDelay = baseRandom() * 800;
+      setTimeout(() => {
+        setInterval(() => {
+          if (baseRandom() < 0.2 + indexOffset * 0.08) { // 20-44% chance
+            progressTextEl.textContent = glitchText(original, 0.15 + baseRandom() * 0.2);
+            progressTextEl.style.transform = 'translateX(' + ((baseRandom() * 4 - 2)) + 'px)';
+            setTimeout(() => {
+              progressTextEl.textContent = original;
+              progressTextEl.style.transform = '';
+            }, 40 + baseRandom() * 140);
+          }
+        }, progressTextInterval);
+      }, progressTextDelay);
+    }
+    
+    if (metaTextEl) {
+      const original = metaTextEl.dataset.original || metaTextEl.textContent;
+      const metaInterval = 500 + baseRandom() * 2200; // 500-2700ms
+      const metaDelay = baseRandom() * 1000;
+      setTimeout(() => {
+        setInterval(() => {
+          if (baseRandom() < 0.15 + indexOffset * 0.1) { // 15-45% chance
+            metaTextEl.textContent = glitchText(original, 0.08 + baseRandom() * 0.15);
+            metaTextEl.style.filter = 'hue-rotate(' + ((baseRandom() * 90 - 45)) + 'deg)';
+            setTimeout(() => {
+              metaTextEl.textContent = original;
+              metaTextEl.style.filter = '';
+            }, 50 + baseRandom() * 180);
+          }
+        }, metaInterval);
+      }, metaDelay);
+    }
+    
+    // Random color flash on progress bar - independent timing
+    if (progressBar) {
+      const flashInterval = 600 + baseRandom() * 2400; // 600-3000ms
+      const flashDelay = baseRandom() * 1200;
+      setTimeout(() => {
+        setInterval(() => {
+          if (baseRandom() < 0.12 + indexOffset * 0.06) { // 12-30% chance
+            const colors = [
+              '0 0 12px var(--color-error), 0 0 20px var(--color-warning)',
+              '0 0 8px var(--color-accent), 0 0 16px var(--color-success)',
+              '0 0 10px var(--color-warning), 0 0 18px var(--color-error)',
+              '0 0 6px var(--color-success), 0 0 14px var(--color-accent)'
+            ];
+            progressBar.style.boxShadow = colors[Math.floor(baseRandom() * colors.length)];
+            progressBar.style.filter = 'brightness(' + (1.2 + baseRandom() * 0.5) + ')';
+            setTimeout(() => {
+              progressBar.style.boxShadow = '';
+              progressBar.style.filter = '';
+            }, 60 + baseRandom() * 240);
+          }
+        }, flashInterval);
+      }, flashDelay);
+    }
+    
+    // Glitch the password input occasionally - independent timing
+    if (passwordInput) {
+      const passwordGlitchInterval = 400 + baseRandom() * 2000; // 400-2400ms
+      const passwordGlitchDelay = baseRandom() * 900;
+      setTimeout(() => {
+        setInterval(() => {
+          if (baseRandom() < 0.15 + indexOffset * 0.08) { // 15-39% chance
+            const original = passwordInput.value;
+            passwordInput.value = glitchText(original, 0.2 + baseRandom() * 0.2);
+            passwordInput.style.color = ['var(--color-error)', 'var(--color-warning)', 'var(--color-accent)', 'var(--color-success)'][Math.floor(baseRandom() * 4)];
+            setTimeout(() => {
+              passwordInput.value = original;
+              passwordInput.style.color = '';
+            }, 50 + baseRandom() * 150);
+          }
+        }, passwordGlitchInterval);
+      }, passwordGlitchDelay);
+    }
+  });
+}
+
 function createSkeletonArticles(count = 3) {
   const fragment = document.createDocumentFragment();
+
+  const hackMessages = [
+    '[>] Cracking password...',
+    '[>] Brute forcing credentials...',
+    '[>] Testing password hash...',
+    '[>] Decrypting credentials...',
+    '[>] Bypassing authentication...',
+    '[>] Exploiting default creds...',
+    '[>] Scanning for weak passwords...',
+    '[>] Injecting credential payload...'
+  ];
 
   for (let i = 0; i < count; i++) {
     const skeleton = document.createElement('div');
     skeleton.className = 'skeleton-article';
+    // Each skeleton gets a different message
+    const messageIndex = (i + Math.floor(Math.random() * hackMessages.length)) % hackMessages.length;
+    const message = hackMessages[messageIndex];
+    // More varied starting progress - some start very low, some higher
+    const progressWidth = 5 + Math.random() * 75; // Random progress 5-80% (wider range)
+    const glitchIntensity = Math.random() * 0.3 + 0.1; // 0.1 to 0.4
+    const skeletonId = 'skeleton-' + Date.now() + '-' + i + '-' + Math.random().toString(36).substr(2, 5);
+    
     skeleton.innerHTML = `
-      <div class="skeleton skeleton-title"></div>
-      <div class="skeleton skeleton-meta"></div>
+      <div class="skeleton-header">
+        <span class="skeleton-prompt">$</span>
+        <span class="skeleton-command" data-original="${message}">${message}</span>
+        <span class="skeleton-glitch-overlay"></span>
+      </div>
+      <div class="skeleton-progress">
+        <div class="skeleton-progress-bar" style="width: ${progressWidth}%">
+          <span class="skeleton-progress-glitch"></span>
+        </div>
+        <span class="skeleton-progress-text" data-original="${Math.floor(progressWidth)}%">${Math.floor(progressWidth)}%</span>
+      </div>
+      <div class="skeleton-password-line">
+        <span class="skeleton-password-label">Trying:</span>
+        <input type="text" class="skeleton-password-input" id="${skeletonId}-password" readonly tabindex="-1" />
+      </div>
+      <div class="skeleton-meta-line">
+        <span class="skeleton-meta-text" data-original="[${String.fromCharCode(65 + i)}] Processing...">[${String.fromCharCode(65 + i)}] Processing...</span>
+      </div>
     `;
+    
+    // Add glitch animation to this specific skeleton
+    skeleton.dataset.glitchIntensity = glitchIntensity;
+    skeleton.dataset.skeletonId = skeletonId;
+    skeleton.dataset.messageType = message; // Store message type for data loading
     fragment.appendChild(skeleton);
   }
 
@@ -623,7 +928,11 @@ async function handleFeed(feed) {
     section.appendChild(h2);
 
     // Add skeleton placeholders
-    section.appendChild(createSkeletonArticles(3));
+    const skeletons = createSkeletonArticles(3);
+    section.appendChild(skeletons);
+    
+    // Apply glitch effects to skeleton text
+    applyGlitchEffects(section);
 
     container.appendChild(section);
   }
@@ -901,22 +1210,7 @@ function applySorting() {
 // ============================================
 // LOADING ANIMATION
 // ============================================
-
-let animationInterval;
-
-function animatePassword() {
-  const el = document.getElementById('password-animation');
-  if (!el) return;
-  if (!passwordList.length) {
-    passwordList = [...fallbackPasswords];
-  }
-
-  let i = 0;
-  animationInterval = setInterval(() => {
-    el.value = passwordList[i];
-    i = (i + 1) % passwordList.length;
-  }, 200);
-}
+// Password animation is now integrated into skeleton loaders
 
 // ============================================
 // LOAD NEWS
@@ -924,7 +1218,6 @@ function animatePassword() {
 
 async function loadNews() {
   const container = document.getElementById('news-feed');
-  const loadingIndicator = document.getElementById('loading-indicator');
   const emptyState = document.getElementById('empty-state');
 
   // Clear previous content
@@ -938,33 +1231,14 @@ async function loadNews() {
   const selected = getFeedsInOrder(true);
 
   if (!selected.length) {
-    if (loadingIndicator) {
-      loadingIndicator.classList.remove('visible');
-      loadingIndicator.setAttribute('aria-hidden', 'true');
-    }
-    clearInterval(animationInterval);
-
     if (emptyState) {
       emptyState.hidden = false;
     }
-
     return;
   }
 
-  if (loadingIndicator) {
-    loadingIndicator.classList.add('visible');
-    loadingIndicator.setAttribute('aria-hidden', 'false');
-  }
-  animatePassword();
-
   // Fetch feeds incrementally
   const results = await Promise.all(selected.map(f => handleFeed(f)));
-
-  // Hide loading indicator
-  if (loadingIndicator) {
-    loadingIndicator.classList.remove('visible');
-    loadingIndicator.setAttribute('aria-hidden', 'true');
-  }
   clearInterval(animationInterval);
 
   // Apply search filter and sorting
@@ -1064,8 +1338,8 @@ function initSidebar() {
 // ============================================
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // Load password list
-  loadPasswordList().catch(() => {});
+  // Preload all message data files
+  preloadAllMessageData().catch(() => {});
 
   // Initialize sidebar
   initSidebar();
