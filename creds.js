@@ -63,8 +63,15 @@ function renderCredsHistory() {
 
   historyDiv.innerHTML = '';
   
-  // Shuffle credentials for random "history" order
-  currentHistoryOrder = [...defaultCreds].filter(c => c && c.user && c.pass).sort(() => Math.random() - 0.5);
+  // Filter valid credentials
+  const validCreds = [...defaultCreds].filter(c => c && c.user && c.pass);
+  
+  // Shuffle credentials using Fisher-Yates algorithm for uniform distribution
+  currentHistoryOrder = [...validCreds];
+  for (let i = currentHistoryOrder.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [currentHistoryOrder[i], currentHistoryOrder[j]] = [currentHistoryOrder[j], currentHistoryOrder[i]];
+  }
   
   if (currentHistoryOrder.length === 0) {
     console.error('No valid credentials after filtering');
