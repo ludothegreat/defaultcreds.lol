@@ -767,12 +767,14 @@ input, select {
   background: var(--color-bg-hover);
 }
 
+/* Active state takes priority - inactive feeds are always dimmed and disabled */
 .feed-option[data-active="false"] {
   opacity: 0.4;
   pointer-events: none;
 }
 
-.feed-option[data-selected="false"] {
+/* Unselected feeds are dimmed, but only if they're active (inactive feeds handled above) */
+.feed-option[data-selected="false"][data-active="true"] {
   opacity: 0.6;
 }
 
