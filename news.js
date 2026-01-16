@@ -148,6 +148,8 @@ if (!storedSelectedFeedsValue) {
   DEFAULT_FEED_ORDER.forEach(url => {
     if (!selectedFeeds.includes(url)) selectedFeeds.push(url);
   });
+  // Save defaults to localStorage to ensure state consistency
+  localStorage.setItem('selectedFeeds', JSON.stringify(selectedFeeds));
 }
 
 // Sort state
