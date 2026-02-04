@@ -32,17 +32,25 @@ export function renderItems(section, feedName, items) {
     hours = hours % 12;
     hours = hours ? hours : 12;
 
-    art.innerHTML = `
-      <header><h3><a href="${item.link}" target="_blank" rel="noopener">${item.title}</a></h3></header>
-      <footer>
-        <small>${formattedDate} - ${hours}:${minutes} ${ampm} | ${feedName}${item.author ? ` - ${item.author}` : ''}</small>
-      </footer>
-    `;
+    const header = document.createElement('header');
+    const h3 = document.createElement('h3');
+    const link = document.createElement('a');
+    link.href = item.link || '#';
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.textContent = item.title || 'Untitled';
+    link.dataset.originalTitle = link.textContent;
+    h3.appendChild(link);
+    header.appendChild(h3);
 
-    const link = art.querySelector('a');
-    if (link) {
-      link.dataset.originalTitle = item.title;
-    }
+    const footer = document.createElement('footer');
+    const meta = document.createElement('small');
+    const authorSuffix = item.author ? ` - ${item.author}` : '';
+    meta.textContent = `${formattedDate} - ${hours}:${minutes} ${ampm} | ${feedName}${authorSuffix}`;
+    footer.appendChild(meta);
+
+    art.appendChild(header);
+    art.appendChild(footer);
 
     section.appendChild(art);
   });
