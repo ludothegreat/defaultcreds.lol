@@ -62,3 +62,11 @@ inspect_live.py
 inspect_page.py
 inspect_with_playwright.py
 test_browser.py
+
+# Local state and reports (do not commit)
+.project-state
+.smoke-state
+docs/check/
+docs/learn/reports/
+docs/web-analysis/reports/
+docs/smoke/reports/
