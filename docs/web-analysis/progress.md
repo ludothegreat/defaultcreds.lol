@@ -5,7 +5,7 @@ Last updated: 2026-02-04T18-26-30Z
 ## General Code Issues
 - [x] Medium: RSS items injected via `innerHTML` (XSS risk) - `js/modules/feed-renderer.js:35` (fixed 2026-02-04T18-26-30Z)
 - [x] Low: Weather page injects API text via `innerHTML` - `weather/index.html:118` (fixed 2026-02-04T18-41-38Z)
-- [ ] Low: External RSS parser script unpinned / no SRI - `index.html`
+- [x] Low: External RSS parser script unpinned / no SRI - `index.html` (fixed 2026-02-05T00-47-49Z)
 - [ ] Low: Input fields missing `id`/`name` (console a11y warning) - `index.html`
 
 ## Feature-Specific Issues
