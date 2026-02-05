@@ -4,14 +4,20 @@ import { getFeedStatus, setLastUpdateTime } from './state.js';
 
 export const CORS_PROXY = "https://api.allorigins.win/raw?url=";
 const ALT_CORS_PROXY = "https://corsproxy.io/?url=";
+const CODETABS_PROXY = "https://api.codetabs.com/v1/proxy?quest=";
+
+const DEFAULT_PROXY_CHAIN = [CORS_PROXY];
 const PROXY_OVERRIDES = new Map([
-  ["https://news.ycombinator.com/rss", ALT_CORS_PROXY],
-  ["https://feeds.arstechnica.com/arstechnica/index", ALT_CORS_PROXY],
-  ["https://www.reddit.com/r/netsec/.rss", ALT_CORS_PROXY]
+  ["https://news.ycombinator.com/rss", [ALT_CORS_PROXY, CODETABS_PROXY, CORS_PROXY]],
+  ["https://feeds.arstechnica.com/arstechnica/index", [ALT_CORS_PROXY, CODETABS_PROXY, CORS_PROXY]],
+  ["https://www.reddit.com/r/netsec/.rss", [ALT_CORS_PROXY, CODETABS_PROXY, CORS_PROXY]]
 ]);
 
-function buildProxyUrl(feedUrl) {
-  const proxy = PROXY_OVERRIDES.get(feedUrl) || CORS_PROXY;
+function getProxyChain(feedUrl) {
+  return PROXY_OVERRIDES.get(feedUrl) || DEFAULT_PROXY_CHAIN;
+}
+
+function buildProxyUrl(proxy, feedUrl) {
   return proxy + encodeURIComponent(feedUrl);
 }
 
@@ -112,26 +118,35 @@ export function getMessageData(messageType) {
 
 export async function fetchXml(feed) {
   const startTime = Date.now();
-  const maxRetries = 3;
+  const maxRetries = 2;
+  let lastError = null;
 
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      const res = await fetch(buildProxyUrl(feed.url));
-      if (!res.ok) throw new Error(`Proxy ${res.status}`);
+  const proxyChain = getProxyChain(feed.url);
 
-      const elapsed = Date.now() - startTime;
-      getFeedStatus().set(feed.url, { status: elapsed > 3000 ? 'slow' : 'loaded', time: elapsed });
+  for (const proxy of proxyChain) {
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        const res = await fetch(buildProxyUrl(proxy, feed.url));
+        if (!res.ok) throw new Error(`Proxy ${res.status}`);
 
-      return await res.text();
-    } catch (err) {
-      console.warn(`Fetch attempt ${i + 1} failed for ${feed.name}:`, err);
-      if (i === maxRetries - 1) {
-        getFeedStatus().set(feed.url, { status: 'failed', error: err.message });
-        err.isProxyError = true;
-        throw err;
+        const elapsed = Date.now() - startTime;
+        getFeedStatus().set(feed.url, { status: elapsed > 3000 ? 'slow' : 'loaded', time: elapsed });
+
+        return await res.text();
+      } catch (err) {
+        lastError = err;
+        console.warn(`Fetch attempt ${i + 1} failed for ${feed.name}:`, err);
+        if (i < maxRetries - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
       }
-      await new Promise(resolve => setTimeout(resolve, 500));
     }
+  }
+
+  if (lastError) {
+    getFeedStatus().set(feed.url, { status: 'failed', error: lastError.message });
+    lastError.isProxyError = true;
+    throw lastError;
   }
 }
 
