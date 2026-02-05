@@ -45,6 +45,7 @@ logs/
 *.key
 *.crt
 *.cert
+.ftp-deploy-sync-state.json
 
 # Custom patterns
 backup*
@@ -52,3 +53,12 @@ live_backup_09212025/
 test_backup/
 
 scripts/.git/
+
+# Server/local tooling (keep out of GitHub)
+server.py
+app.py
+requirements.txt
+inspect_live.py
+inspect_page.py
+inspect_with_playwright.py
+test_browser.py

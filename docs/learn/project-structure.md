@@ -1,71 +1,39 @@
 # Project Structure
 
-## Directory Tree
+## Top-Level Layout
 
-```
-defaultcreds.lol/
-├── index.html              # Main HTML entry point
-├── styles.css              # Complete design system and styles
-├── news.js                 # Core application logic (1030 lines)
-├── widget.js               # "Cred of the Week" widget
-├── creds.js               # Faux URL bar and credential management
-├── ui.js                   # Placeholder for future UI enhancements
-├── creds.json              # Default credentials database
-├── top_1000_passwords.txt  # Password wordlist for loading animation
-├── server.py               # Simple HTTPS server for local development
-├── ui-refactor-brief.md    # UI refactor specifications
-├── .gitignore              # Git ignore patterns
-├── guides/
-│   └── dbi.html            # Guide/documentation page
-├── weather/
-│   ├── index.html          # Weather-related page
-│   └── test.html           # Weather test page
-└── jdownloader/
-    ├── index.html          # JDownloader guide
-    └── jdownload*.png      # Guide images
-```
+- `index.html` — Main page markup and layout.
+- `styles.css` — Global design system and UI styling.
+- `js/` — Modular JavaScript for feed orchestration and UI.
+- `creds.js` — Faux URL bar and credential history logic.
+- `widget.js` — “Cred of the Week” widget (SecLists integration).
+- `ui.js` — Placeholder for future UI logic.
+- `creds.json` — Default credential list for faux URL and history.
+- `*.txt` — Wordlists and data for animations and placeholders.
+- `docs/` — Project documentation and reports.
+- `guides/`, `jdownloader/`, `weather/` — Static content/pages and assets.
+- `README-SERVER.md` — Local dev server instructions.
 
-## File Organization Patterns
+## Directory Tree (Key Areas)
 
-### Core Application Files
-- **index.html**: Single-page application structure
-- **news.js**: All core functionality (feed fetching, parsing, rendering, state management)
-- **styles.css**: Complete design system with CSS variables
-- **widget.js**: Isolated widget functionality
-- **creds.js**: Isolated credential display functionality
+- `docs/`
+- `docs/learn/`
+- `docs/web-analysis/`
+- `guides/`
+- `jdownloader/`
+- `js/`
+- `js/modules/`
+- `scripts/`
+- `weather/`
 
-### Organization Philosophy
-- **Monolithic core**: `news.js` contains most application logic
-- **Modular widgets**: Separate files for distinct features (widget, creds)
-- **No build step**: All files are served directly
-- **Flat structure**: Most files at root level for simplicity
+## Entry Points
 
-### Entry Points
-- **index.html**: Main entry point, loads all scripts in order
-- **server.py**: Optional local development server
+- Web app entry: `index.html`
+- JS orchestrator: `js/news.js`
 
-### Configuration
-- **creds.json**: Static credential database
-- **top_1000_passwords.txt**: Password wordlist
-- No environment variables or config files (uses localStorage for state)
+## Organization Patterns
 
-### Documentation
-- **ui-refactor-brief.md**: Design specifications
-- **guides/**: Additional documentation pages
-
-## Naming Conventions
-
-- **Files**: kebab-case (e.g., `ui-refactor-brief.md`)
-- **JavaScript**: camelCase for variables/functions
-- **CSS classes**: kebab-case (e.g., `feed-section`, `panel-header`)
-- **IDs**: kebab-case (e.g., `news-feed`, `feed-list`)
-
-## Architectural Patterns Visible in Structure
-
-1. **Single Page Application**: One HTML file, JavaScript manages all state
-2. **Progressive Enhancement**: Works without JavaScript (basic HTML structure)
-3. **Separation of Concerns**: 
-   - HTML = structure
-   - CSS = presentation
-   - JS = behavior
-4. **No Framework**: Vanilla JavaScript, no build tools
+- UI is defined in `index.html` and `styles.css`.
+- Client logic is split into small modules under `js/modules/`.
+- “Theming” data and demo content live in plain text files in repo root.
+- Documentation lives in `docs/` with subfolders by topic.
