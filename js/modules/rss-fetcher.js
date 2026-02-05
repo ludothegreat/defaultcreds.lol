@@ -3,6 +3,17 @@
 import { getFeedStatus, setLastUpdateTime } from './state.js';
 
 export const CORS_PROXY = "https://api.allorigins.win/raw?url=";
+const ALT_CORS_PROXY = "https://corsproxy.io/?url=";
+const PROXY_OVERRIDES = new Map([
+  ["https://news.ycombinator.com/rss", ALT_CORS_PROXY],
+  ["https://feeds.arstechnica.com/arstechnica/index", ALT_CORS_PROXY],
+  ["https://www.reddit.com/r/netsec/.rss", ALT_CORS_PROXY]
+]);
+
+function buildProxyUrl(feedUrl) {
+  const proxy = PROXY_OVERRIDES.get(feedUrl) || CORS_PROXY;
+  return proxy + encodeURIComponent(feedUrl);
+}
 
 // RSSParser is loaded globally from CDN
 const parser = typeof RSSParser !== 'undefined' ? new RSSParser() : null;
@@ -105,7 +116,7 @@ export async function fetchXml(feed) {
 
   for (let i = 0; i < maxRetries; i++) {
     try {
-      const res = await fetch(CORS_PROXY + encodeURIComponent(feed.url));
+      const res = await fetch(buildProxyUrl(feed.url));
       if (!res.ok) throw new Error(`Proxy ${res.status}`);
 
       const elapsed = Date.now() - startTime;
