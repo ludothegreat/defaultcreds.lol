@@ -64,8 +64,33 @@
     <script>
         // Function to extract low temperature from detailed forecast
         function extractLowTemperature(detailedForecast) {
-            const lowTempMatch = detailedForecast.match(/low around (\d+)\u00b0F/i);
-            return lowTempMatch ? lowTempMatch[1] : "No low temperature available";
+            const lowTempMatch = detailedForecast.match(/low around (\d+)/i);
+            return lowTempMatch ? Number(lowTempMatch[1]) : null;
+        }
+
+        function formatTemperature(value, unit, fallback) {
+            if (value === null || value === undefined || value === '') {
+                return fallback;
+            }
+            const numericValue = typeof value === 'string' ? Number(value) : value;
+            if (Number.isNaN(numericValue)) {
+                return fallback;
+            }
+            return `${Math.round(numericValue)}°${unit}`;
+        }
+
+        function formatCurrentTemperature(value, unitCode) {
+            if (value === null || value === undefined || value === '') {
+                return "Temperature: N/A";
+            }
+            if (unitCode && unitCode.includes("degC")) {
+                const fahrenheit = (value * 9) / 5 + 32;
+                return `Temperature: ${Math.round(fahrenheit)}°F`;
+            }
+            if (unitCode && unitCode.includes("degF")) {
+                return `Temperature: ${Math.round(value)}°F`;
+            }
+            return `Temperature: ${Math.round(value)}°F`;
         }
 
         async function fetchWeatherData() {
@@ -81,6 +106,7 @@
                 const observationResponse = await fetch(`https://api.weather.gov/stations/${stationId}/observations/latest`);
                 const observationData = await observationResponse.json();
                 const currentTemp = observationData.properties.temperature.value;
+                const currentTempUnitCode = observationData.properties.temperature.unitCode;
                 const currentHumidity = observationData.properties.relativeHumidity.value;
                 const currentDescription = observationData.properties.textDescription;
 
@@ -90,7 +116,7 @@
                 const forecastPeriods = forecastData.properties.periods.slice(0, 5);
 
                 // Update current weather
-                document.getElementById('current-temp').textContent = `Temperature: ${currentTemp}°F`;
+                document.getElementById('current-temp').textContent = formatCurrentTemperature(currentTemp, currentTempUnitCode);
                 document.getElementById('current-humidity').textContent = `Humidity: ${currentHumidity}%`;
                 document.getElementById('current-description').textContent = `Description: ${currentDescription}`;
 
@@ -102,13 +128,12 @@
                     const forecastElement = document.createElement("div");
                     forecastElement.classList.add("forecast-day");
 
-                    // Extracting high temperature
-                    const highTemp = day.temperature || "No high temperature available";
-                    const highTemperature = typeof highTemp === 'object' ? highTemp.value : highTemp;
+                    const temperatureUnit = day.temperatureUnit || "F";
+                    const highTemperature = day.temperature;
 
                     // Extract low temperature from detailed forecast
-                    let lowTemperature = day.temperatureLow || "No low temperature available";
-                    if (!lowTemperature && day.detailedForecast) {
+                    let lowTemperature = day.temperatureLow;
+                    if ((lowTemperature === null || lowTemperature === undefined) && day.detailedForecast) {
                         lowTemperature = extractLowTemperature(day.detailedForecast);
                     }
 
@@ -124,7 +149,9 @@
                     mainInfo.appendChild(dayName);
                     mainInfo.appendChild(document.createElement("br"));
 
-                    const temps = document.createTextNode(`High: ${highTemperature}°F | Low: ${lowTemperature}°F`);
+                    const highLabel = formatTemperature(highTemperature, temperatureUnit, "No high temperature available");
+                    const lowLabel = formatTemperature(lowTemperature, temperatureUnit, "No low temperature available");
+                    const temps = document.createTextNode(`High: ${highLabel} | Low: ${lowLabel}`);
                     mainInfo.appendChild(temps);
                     mainInfo.appendChild(document.createElement("br"));
 
