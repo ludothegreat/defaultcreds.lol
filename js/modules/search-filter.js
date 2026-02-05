@@ -6,6 +6,37 @@ export function escapeRegExp(string) {
   return string.replace(/([.*+?^${}()|[\]\\])/g, '\\$1');
 }
 
+function renderHighlightedText(element, text, term) {
+  if (!element) return;
+  element.textContent = '';
+
+  if (!term) {
+    element.textContent = text;
+    return;
+  }
+
+  const highlightRegex = new RegExp(escapeRegExp(term), 'gi');
+  let lastIndex = 0;
+  let match = highlightRegex.exec(text);
+
+  while (match) {
+    const matchIndex = match.index;
+    if (matchIndex > lastIndex) {
+      element.appendChild(document.createTextNode(text.slice(lastIndex, matchIndex)));
+    }
+    const mark = document.createElement('mark');
+    mark.className = 'search-highlight';
+    mark.textContent = text.slice(matchIndex, matchIndex + match[0].length);
+    element.appendChild(mark);
+    lastIndex = matchIndex + match[0].length;
+    match = highlightRegex.exec(text);
+  }
+
+  if (lastIndex < text.length) {
+    element.appendChild(document.createTextNode(text.slice(lastIndex)));
+  }
+}
+
 export function applySearchFilter(rawTerm = '') {
   const searchBar = document.getElementById('search-bar');
   const filterStatus = document.getElementById('filter-status');
@@ -36,12 +67,11 @@ export function applySearchFilter(rawTerm = '') {
     const matches = !normalizedTerm.length || titleMatches || linkMatches;
 
     if (!normalizedTerm.length) {
-      link.innerHTML = originalTitle;
+      renderHighlightedText(link, originalTitle, '');
     } else if (titleMatches) {
-      const highlightRegex = new RegExp(`(${escapeRegExp(trimmedTerm)})`, 'gi');
-      link.innerHTML = originalTitle.replace(highlightRegex, '<mark class="search-highlight">$1</mark>');
+      renderHighlightedText(link, originalTitle, trimmedTerm);
     } else {
-      link.innerHTML = originalTitle;
+      renderHighlightedText(link, originalTitle, '');
     }
 
     article.style.display = matches ? '' : 'none';

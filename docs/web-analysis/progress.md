@@ -1,8 +1,9 @@
 # Debug Progress Tracker
 
-Last updated: 2026-02-05T03-30-33Z
+Last updated: 2026-02-05T03-46-40Z
 
 ## General Code Issues
+- [x] Medium: Potential XSS in search highlighting (RSS titles re-injected via `innerHTML`) - `js/modules/search-filter.js:33-46` (fixed 2026-02-05T03-46-40Z)
 - [x] Medium: RSS items injected via `innerHTML` (XSS risk) - `js/modules/feed-renderer.js:35` (fixed 2026-02-04T18-26-30Z)
 - [x] Low: Weather page injects API text via `innerHTML` - `weather/index.html:118` (fixed 2026-02-04T18-41-38Z)
 - [x] Low: External RSS parser script unpinned / no SRI - `index.html` (fixed 2026-02-05T00-47-49Z)
