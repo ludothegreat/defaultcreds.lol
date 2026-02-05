@@ -115,23 +115,29 @@
                     const shortForecast = day.shortForecast || "No forecast available";
                     const detailedForecast = day.detailedForecast || "No detailed description available";
 
-                    // Construct the forecast display
-                    const mainInfo = `
-                        <div class="main-info">
-                            <strong>${day.name}</strong><br>
-                            High: ${highTemperature}°F | Low: ${lowTemperature}°F<br>
-                            Weather: ${shortForecast}
-                        </div>
-                    `;
+                    // Construct the forecast display without innerHTML
+                    const mainInfo = document.createElement("div");
+                    mainInfo.classList.add("main-info");
 
-                    // Construct the detailed description
-                    const description = `
-                        <div class="description">
-                            ${detailedForecast}
-                        </div>
-                    `;
+                    const dayName = document.createElement("strong");
+                    dayName.textContent = day.name;
+                    mainInfo.appendChild(dayName);
+                    mainInfo.appendChild(document.createElement("br"));
 
-                    forecastElement.innerHTML = mainInfo + description;
+                    const temps = document.createTextNode(`High: ${highTemperature}°F | Low: ${lowTemperature}°F`);
+                    mainInfo.appendChild(temps);
+                    mainInfo.appendChild(document.createElement("br"));
+
+                    const forecastText = document.createTextNode(`Weather: ${shortForecast}`);
+                    mainInfo.appendChild(forecastText);
+
+                    // Construct the detailed description without innerHTML
+                    const description = document.createElement("div");
+                    description.classList.add("description");
+                    description.textContent = detailedForecast;
+
+                    forecastElement.appendChild(mainInfo);
+                    forecastElement.appendChild(description);
                     forecastContainer.appendChild(forecastElement);
                 });
 
